@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Brand Accent: Warm Saffron / Visava Orange */
+  --visava-orange: #ff7b00;
+  --visava-orange-light: #ff9d40;
+  --visava-orange-dark: #cc6200;
+
+  /* Semantic Colors */
+  --color-green-open: #10b981;
+  --color-blue-water: #3b82f6;
+  --color-red-medical: #ef4444;
+  --color-purple-toilet: #8b5cf6;
+  --color-orange-camp: #f97316;
+  --color-yellow-helper: #eab308;
+
+  /* Layout Tokens */
+  --mobile-header-gap: 16px;
+  --visava-header-top-spacing: calc(16px + env(safe-area-inset-top, 0px));
+
+  /* Light Mode Theme (Default) */
+  --bg-main: #fcfbf9; /* Warm ivory/off-white */
+  --bg-map: #f0eadd;
+  --text-primary: #1f2937;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  
+  /* Liquid Glass Surfaces - Light */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-bg-solid: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --glass-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+html.dark {
+  /* Dark Mode Theme */
+  --bg-main: #121212; /* Deep charcoal */
+  --bg-map: #1e1e1e;
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  
+  /* Liquid Glass Surfaces - Dark */
+  --glass-bg: rgba(30, 30, 30, 0.75);
+  --glass-bg-solid: rgba(30, 30, 30, 0.95);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1);
+  --glass-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden; /* Prevent scrolling for the full-screen map app */
+  touch-action: none;
+}
+
+/* Base Utility Classes */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 20px;
+}
+
+.glass-panel-solid {
+  background: var(--glass-bg-solid);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 20px;
+}
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-accent { color: var(--visava-orange); }
+
+/* Layout classes */
+.app-container {
+  position: relative;
+  width: 100vw;
+  height: 100dvh; /* dynamic viewport height to account for browser UI */
+  display: flex;
+  flex-direction: column;
+}
+
+.map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-map);
+  z-index: 0;
+}
+
+.ui-layer {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none; /* Let clicks pass through to map where there's no UI */
+}
+
+.ui-layer > * {
+  pointer-events: auto; /* Re-enable pointer events for UI elements */
+}
+
+/* Animations */
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+  100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
+.animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-fade-in { animation: fadeIn 0.3s ease forwards; }
+
+button {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+button:active {
+  transform: scale(0.96);
+}

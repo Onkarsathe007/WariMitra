@@ -1,0 +1,333 @@
+.offer-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 120px; /* Space for bottom nav */
+  background-color: var(--bg-main);
+}
+
+/* Atmospheric Background */
+.offer-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  background: 
+    radial-gradient(circle at 10% 30%, rgba(255, 123, 0, 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 90% 70%, rgba(255, 123, 0, 0.05) 0%, transparent 50%);
+}
+
+html.dark .offer-background {
+  background: 
+    radial-gradient(circle at 10% 30%, rgba(255, 123, 0, 0.1) 0%, rgba(18,18,18,1) 70%),
+    radial-gradient(circle at 90% 70%, rgba(255, 123, 0, 0.05) 0%, transparent 50%);
+}
+
+.offer-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px 20px 20px;
+  gap: 24px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.offer-title-area {
+  margin-top: 16px;
+}
+
+.offer-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.offer-subtitle {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Section Styling */
+.offer-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+/* Service Grid */
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.service-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16px 12px;
+  gap: 8px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.service-card:active {
+  transform: scale(0.97);
+}
+
+.service-card.selected {
+  border-color: var(--visava-orange);
+  background: rgba(255, 123, 0, 0.05);
+  box-shadow: 0 4px 16px rgba(255, 123, 0, 0.1);
+}
+
+html.dark .service-card.selected {
+  background: rgba(255, 123, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(255, 123, 0, 0.15);
+}
+
+.service-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.04);
+  color: var(--text-primary);
+}
+
+html.dark .service-card-icon {
+  background: rgba(255,255,255,0.05);
+}
+
+.service-card.selected .service-card-icon {
+  background: var(--visava-orange);
+  color: white;
+}
+
+.service-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.service-card-subtitle {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.2;
+}
+
+.service-card-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--visava-orange);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Map Preview */
+.map-preview-container {
+  width: 100%;
+  height: 200px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  position: relative;
+  margin-bottom: 12px;
+  box-shadow: var(--glass-shadow);
+}
+
+.location-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--glass-bg-solid);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: var(--glass-shadow);
+}
+
+/* Form Fields */
+.glass-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.glass-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.4);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 15px;
+  transition: all 0.2s;
+}
+
+html.dark .glass-input {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: var(--visava-orange);
+  background: var(--glass-bg-solid);
+  box-shadow: 0 0 0 3px rgba(255, 123, 0, 0.1);
+}
+
+textarea.glass-input {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.contact-options {
+  display: flex;
+  gap: 12px;
+}
+
+.contact-pill {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.contact-pill.selected {
+  background: var(--glass-bg-solid);
+  border-color: var(--visava-orange);
+  color: var(--text-primary);
+}
+
+/* Validation Message */
+.validation-message {
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 4px solid var(--color-red-medical);
+  color: var(--color-red-medical);
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Primary Button */
+.primary-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  background-color: var(--visava-orange);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(255, 123, 0, 0.3);
+  margin-top: 8px;
+}
+
+.primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Success State */
+.success-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 20px;
+  gap: 16px;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--color-green-open);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.success-state h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.success-state p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}

@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
-import WarkariFeed from './components/WarkariFeed';
-import HelperDashboard from './components/HelperDashboard';
 import LandingPage from './components/LandingPage';
 import RoleSelection from './components/RoleSelection';
 import GoogleLogin from './components/GoogleLogin';
 import ProfileCompletion from './components/ProfileCompletion';
-import { MapPin, Compass, HandHeart, LogOut } from 'lucide-react';
+import { MapView } from './components/MapView';
+import { Header } from './components/Header';
+import { SearchBar } from './components/SearchBar';
+import { MapControls } from './components/MapControls';
+import { NearestCampCard } from './components/NearestCampCard';
+import { BottomNavigation } from './components/BottomNavigation';
+import { ProfilePage } from './components/ProfilePage';
+import { OfferHelpPage } from './components/OfferHelpPage';
+import type { TabType } from './types';
 
 type Page = 'landing' | 'role-select' | 'google-login' | 'profile-complete' | 'app';
 
@@ -23,9 +29,9 @@ interface User {
 
 function App() {
   const [page, setPage] = useState<Page>('landing');
-  const [currentView, setCurrentView] = useState<'explorer' | 'helper'>('explorer');
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [currentTab, setCurrentTab] = useState<TabType>('map');
 
   useEffect(() => {
     const savedToken = localStorage.getItem('visava_token');
@@ -36,7 +42,6 @@ function App() {
         setToken(savedToken);
         setUser(parsedUser);
         if (parsedUser.profileComplete) {
-          setCurrentView(parsedUser.role === 'helper' ? 'helper' : 'explorer');
           setPage('app');
         } else {
           setPage('profile-complete');
@@ -50,21 +55,16 @@ function App() {
 
   const handleStart = () => setPage('role-select');
 
-  const handleRoleSelect = (role: 'explorer' | 'helper') => {
-    if (role === 'helper') {
-      setPage('google-login');
-    } else {
-      setPage('google-login');
-    }
+  const handleRoleSelect = (_role: 'explorer' | 'helper') => {
+    setPage('google-login');
   };
 
   const handleBackToLanding = () => setPage('landing');
 
-  const handleGoogleSuccess = (googleUser: any, googleToken: string) => {
+  const handleGoogleSuccess = (googleUser: User, googleToken: string) => {
     setUser(googleUser);
     setToken(googleToken);
     if (googleUser.profileComplete) {
-      setCurrentView(googleUser.role === 'helper' ? 'helper' : 'explorer');
       setPage('app');
     } else {
       setPage('profile-complete');
@@ -78,7 +78,6 @@ function App() {
 
   const handleProfileComplete = (updatedUser: User) => {
     setUser(updatedUser);
-    setCurrentView(updatedUser.role === 'helper' ? 'helper' : 'explorer');
     setPage('app');
   };
 
@@ -90,67 +89,68 @@ function App() {
     setPage('landing');
   };
 
+  if (page === 'landing') {
+    return <LandingPage onStart={handleStart} />;
+  }
+
+  if (page === 'role-select') {
+    return <RoleSelection onSelect={handleRoleSelect} onBack={handleBackToLanding} />;
+  }
+
+  if (page === 'google-login') {
+    return (
+      <div className="google-login-page">
+        <div className="google-login-page-bg" />
+        <div className="google-login-page-content">
+          <h2>Sign In to Visava</h2>
+          <p>Continue with Google to start your journey</p>
+          <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
+          <button className="back-link" onClick={() => setPage('role-select')}>
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (page === 'profile-complete' && user && token) {
+    return <ProfileCompletion user={user} token={token} onComplete={handleProfileComplete} />;
+  }
+
   return (
-    <>
-      {page === 'landing' && <LandingPage onStart={handleStart} />}
-      {page === 'role-select' && (
-        <RoleSelection onSelect={handleRoleSelect} onBack={handleBackToLanding} />
-      )}
-      {page === 'google-login' && (
-        <div className="google-login-page">
-          <div className="google-login-page-bg" />
-          <div className="google-login-page-content">
-            <h2>Sign In to Visava</h2>
-            <p>Continue with Google to start your journey</p>
-            <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
-            <button className="back-link" onClick={() => setPage('role-select')}>
-              ← Back
-            </button>
-          </div>
+    <div className="app-container">
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+        <MapView />
+        <div className="ui-layer" style={{ display: currentTab === 'map' ? 'flex' : 'none' }}>
+          <Header />
+          <SearchBar />
+          <MapControls />
+          <NearestCampCard />
+        </div>
+      </div>
+
+      {currentTab === 'profile' && (
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 10 }}>
+          <ProfilePage user={user} onLogout={handleLogout} />
         </div>
       )}
-      {page === 'profile-complete' && user && token && (
-        <ProfileCompletion user={user} token={token} onComplete={handleProfileComplete} />
+
+      {currentTab === 'help' && (
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 10 }}>
+          <OfferHelpPage />
+        </div>
       )}
 
-      {page === 'app' && (
-        <>
-          <div className="header glass-panel">
-            <MapPin color="#f97316" size={28} />
-            <h1>Visava Wari Map</h1>
-
-            <div className="role-toggle">
-              <button
-                className={`role-btn ${currentView === 'explorer' ? 'active' : ''}`}
-                onClick={() => setCurrentView('explorer')}
-              >
-                <Compass size={18} /> Warkari Explorer
-              </button>
-              <button
-                className={`role-btn ${currentView === 'helper' ? 'active' : ''}`}
-                onClick={() => setCurrentView('helper')}
-              >
-                <HandHeart size={18} /> Helper Portal
-              </button>
-            </div>
-
-            {user && (
-              <div className="user-menu">
-                {user.avatar && (
-                  <img src={user.avatar} alt={user.name} className="user-avatar" />
-                )}
-                <span className="user-name">{user.name}</span>
-                <button className="logout-btn" onClick={handleLogout} title="Logout">
-                  <LogOut size={18} />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {currentView === 'explorer' ? <WarkariFeed /> : <HelperDashboard />}
-        </>
+      {currentTab === 'explore' && (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, position: 'absolute', width: '100%', height: '100%', pointerEvents: 'none' }}>
+          <p className="text-secondary glass-panel" style={{ padding: '8px 16px', pointerEvents: 'auto' }}>Coming Soon</p>
+        </div>
       )}
-    </>
+
+      <div className="ui-layer" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 100 }}>
+        <BottomNavigation currentTab={currentTab} onTabChange={setCurrentTab} />
+      </div>
+    </div>
   );
 }
 

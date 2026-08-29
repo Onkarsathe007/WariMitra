@@ -1,0 +1,363 @@
+.profile-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 120px; /* Space for bottom nav */
+  background-color: var(--bg-main);
+}
+
+/* Atmospheric Background */
+.profile-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  background: 
+    radial-gradient(circle at 50% 20%, rgba(255, 123, 0, 0.15) 0%, transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(255, 123, 0, 0.05) 0%, transparent 50%);
+}
+
+html.dark .profile-background {
+  background: 
+    radial-gradient(circle at 50% 20%, rgba(255, 123, 0, 0.1) 0%, rgba(18,18,18,1) 70%),
+    radial-gradient(circle at 80% 80%, rgba(255, 123, 0, 0.05) 0%, transparent 50%);
+}
+
+/* Content Container */
+.profile-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px 20px 20px;
+  gap: 24px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.settings-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+}
+
+/* Hero Section */
+.profile-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.avatar-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin-bottom: 16px;
+  padding: 4px;
+  background: var(--glass-bg);
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.edit-avatar-btn {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 32px;
+  height: 32px;
+  background-color: var(--visava-orange);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--bg-main);
+  box-shadow: 0 4px 12px rgba(255, 123, 0, 0.4);
+}
+
+.profile-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.warkari-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--visava-orange);
+}
+
+/* Summary Card */
+.summary-card {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 20px;
+}
+
+.summary-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.summary-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.summary-divider {
+  width: 1px;
+  height: 32px;
+  background-color: var(--glass-border);
+  margin: auto 16px;
+}
+
+/* Personalization Card */
+.personalization-card {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add a subtle orange glow inside the personalization card */
+.personalization-card::before {
+  content: "";
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(255,123,0,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.personalization-header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.personalization-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: rgba(255, 123, 0, 0.1);
+  color: var(--visava-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.personalization-text h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.personalization-text p {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.chips-container {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.chip-blue { color: var(--color-blue-water); }
+.chip-orange { color: var(--visava-orange); }
+.chip-green { color: var(--color-green-open); }
+.chip-gray { color: var(--text-secondary); }
+
+/* Settings Surface */
+.settings-surface {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  gap: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.settings-row:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+html.dark .settings-row:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.settings-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: rgba(0,0,0,0.05);
+  color: var(--text-secondary);
+}
+
+html.dark .settings-icon {
+  background-color: rgba(255,255,255,0.05);
+}
+
+.settings-icon.icon-orange { background-color: rgba(255, 123, 0, 0.1); color: var(--visava-orange); }
+.settings-icon.icon-blue { background-color: rgba(59, 130, 246, 0.1); color: var(--color-blue-water); }
+.settings-icon.icon-purple { background-color: rgba(139, 92, 246, 0.1); color: var(--color-purple-toilet); }
+.settings-icon.icon-red { background-color: rgba(239, 68, 68, 0.1); color: var(--color-red-medical); }
+.settings-icon.icon-green { background-color: rgba(16, 185, 129, 0.1); color: var(--color-green-open); }
+
+.settings-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-text h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.settings-text p {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.settings-action {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+}
+
+.settings-divider {
+  height: 1px;
+  background-color: var(--glass-border);
+  margin: 0 20px;
+}
+
+/* Custom Theme Toggle Switch */
+.theme-toggle-switch {
+  position: relative;
+  width: 56px;
+  height: 32px;
+  border-radius: 20px;
+  background-color: rgba(0,0,0,0.1);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+html.dark .theme-toggle-switch {
+  background-color: rgba(255,123,0,0.1);
+  border-color: var(--visava-orange);
+}
+
+.theme-toggle-thumb {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transform: translateX(0);
+}
+
+html.dark .theme-toggle-thumb {
+  transform: translateX(24px);
+  background-color: var(--visava-orange);
+}
+
+.theme-toggle-icon {
+  width: 14px;
+  height: 14px;
+}
+
+html.dark .theme-toggle-icon {
+  color: white;
+}
