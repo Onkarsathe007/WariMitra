@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import axios from 'axios';
-import { Phone, Loader2, Utensils, Tent, AlertTriangle, Layers } from 'lucide-react';
+import { Phone, Utensils, Tent, AlertTriangle, Layers } from 'lucide-react';
 
 const CORE_API_URL = 'http://localhost:3000/api/v1';
 
@@ -44,7 +44,6 @@ function FlyToLocation({ target }: { target: { lat: number, lng: number } | null
 export default function WarkariFeed() {
   const [locations, setLocations] = useState<LocationPoint[]>([]);
   const [richDetails, setRichDetails] = useState<Record<string, any>>({});
-  const [loadingDetails, setLoadingDetails] = useState<Record<string, boolean>>({});
   
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [focusedLocation, setFocusedLocation] = useState<{lat: number, lng: number} | null>(null);

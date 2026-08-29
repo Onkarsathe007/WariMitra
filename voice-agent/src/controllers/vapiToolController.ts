@@ -27,9 +27,14 @@ export const handleVapiTools = async (req: Request, res: Response): Promise<void
       if (toolCall.type === "function") {
         const { name, arguments: argsString } = toolCall.function;
         let resultContent = "";
+        let args: any = {};
 
         try {
-          const args = typeof argsString === 'string' ? JSON.parse(argsString || '{}') : (argsString || {});
+          if (typeof argsString === 'string') {
+            args = JSON.parse(argsString || '{}');
+          } else {
+            args = argsString || {};
+          }
           switch (name) {
             case "find_nearby_services":
             case "find_nearby_food":
@@ -76,9 +81,9 @@ export const handleVapiTools = async (req: Request, res: Response): Promise<void
                 }
 
                 // Add Routing directions
-                if (topItem.location && topItem.location.coordinates) {
-                  const destLng = topItem.location.coordinates[0];
-                  const destLat = topItem.location.coordinates[1];
+                if (topItem.location && topItem.location.lat && topItem.location.lng) {
+                  const destLng = topItem.location.lng;
+                  const destLat = topItem.location.lat;
                   const directions = await getWalkingDirections(coords.lat, coords.lng, destLat, destLng);
                   
                   if (directions.length > 0) {
@@ -108,7 +113,7 @@ export const handleVapiTools = async (req: Request, res: Response): Promise<void
               });
 
               if (report) {
-                resultContent = `Report successfully created. Report ID is ${report._id.toString().substring(0, 4)}. Help will be dispatched soon.`;
+                resultContent = `Report successfully created. Report ID is ${report.id.substring(0, 4)}. Help will be dispatched soon.`;
               } else {
                 resultContent = `Error: Failed to create report. Please try again.`;
               }
@@ -156,7 +161,7 @@ export const handleVapiTools = async (req: Request, res: Response): Promise<void
               });
 
               if (report) {
-                resultContent = `Found item report created. Report ID is ${report._id.toString().substring(0, 4)}.`;
+                resultContent = `Found item report created. Report ID is ${report.id.substring(0, 4)}.`;
               } else {
                 resultContent = `Error: Failed to create report.`;
               }

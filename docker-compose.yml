@@ -1,26 +1,4 @@
-version: "3.8"
-
 services:
-  mongodb:
-    image: mongo:7.0
-    container_name: visava-mongodb
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-password}
-    volumes:
-      - mongodb_data:/data/db
-    command: --wiredTigerCacheSizeGB 0.25
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    networks:
-      - visava-network
-
   redis:
     image: redis:7-alpine
     container_name: visava-redis
@@ -29,13 +7,9 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - visava-network
+    restart: unless-stopped
 
   core-api:
     build:
@@ -45,24 +19,15 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - redis
     env_file:
       - ./core-api/.env
     environment:
-      MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-password}@mongodb:27017/visava?authSource=admin
       REDIS_URL: redis://redis:6379
       GEO_SERVICE_URL: http://geo-service:8081
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
     networks:
       - visava-network
+    restart: unless-stopped
 
   geo-service:
     build:
@@ -72,20 +37,14 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      redis:
-        condition: service_healthy
+      - redis
     env_file:
       - ./geo-service/.env
     environment:
       REDIS_URL: redis://redis:6379
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
     networks:
       - visava-network
+    restart: unless-stopped
 
   voice-agent:
     build:
@@ -96,25 +55,32 @@ services:
       - "4000:4000"
       - "4001:4001"
     depends_on:
-      core-api:
-        condition: service_healthy
+      - core-api
     env_file:
       - ./voice-agent/.env
     environment:
       CORE_API_URL: http://core-api:3000
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
     networks:
       - visava-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: visava-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - core-api
+      - voice-agent
+    networks:
+      - visava-network
+    restart: unless-stopped
 
 networks:
   visava-network:
     driver: bridge
 
 volumes:
-  mongodb_data:
   redis_data:

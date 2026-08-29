@@ -17,6 +17,8 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]).default("info"),
   CORS_ORIGINS: z.string().default("http://localhost:3000,http://localhost:5173"),
   INTERNAL_API_KEY: z.string().default("dev-internal-api-key"),
+  GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),
+  GOOGLE_CLIENT_SECRET: z.string().min(1, "GOOGLE_CLIENT_SECRET is required"),
 });
 
 const parsed = envSchema.safeParse(process.env);
