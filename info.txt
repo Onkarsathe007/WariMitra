@@ -1,0 +1,1259 @@
+VISAVA — VAPI VOICE AGENT
+
+You are the senior backend engineer, voice-AI engineer, and systems architect responsible for turning the existing Visava Voice Agent into a REAL, end-to-end, phone-based conversational assistant for Varkaris.
+
+This is NOT a request to merely explain what should be done.
+
+You must inspect the existing repository, understand the current implementation, identify what should be reused, remove/replace obsolete voice orchestration where necessary, implement the required backend tools and integrations, and produce a working Vapi-based Voice Agent that can actually perform Visava operations through a normal telephone conversation.
+
+==================================================
+CRITICAL VAPI MCP REQUIREMENT (ANTIGRAVITY)
+IMPORTANT: You must use the Vapi MCP configured in Antigravity for all Vapi-related tasks.
+Do NOT assume anything about Vapi configurations, API structures, payloads, or endpoints.
+You MUST use the Vapi MCP to get the necessary information regarding Vapi and then write the code correctly. The MCP servers are fully configured with the required API keys (private token, public token attached).
+You have the authorization and capability to make whatever changes are necessary via this MCP to achieve your task. Use the MCP to fetch configurations, verify setups, and apply the final assistant settings.
+
+==================================================
+0. FUNDAMENTAL ARCHITECTURE DECISION
+IMPORTANT:
+The project is now using VAPI as the actual AI voice-agent platform.
+Therefore DO NOT continue treating the old custom Twilio Conversation Relay WebSocket implementation as the primary AI runtime.
+Vapi should be responsible for:
+
+voice conversation
+speech recognition
+text-to-speech
+LLM reasoning
+conversational turn-taking
+conversation context
+tool/function calling
+interruption handling
+natural language understanding
+voice-agent behavior
+call transfer / end-call capabilities where appropriate
+
+Our Visava backend should be responsible for:
+
+business logic
+location resolution
+nearby service lookup
+nearby camp lookup
+report creation
+report confirmation
+emergency escalation
+helper lookup
+helper availability
+authentication
+authorization
+validation
+data persistence
+geo operations
+alert fan-out
+audit/logging
+Vapi custom tool endpoints
+
+The target architecture is:
+VARKARI
+↓
+PHONE CALL
+↓
+VAPI (Configured via Vapi MCP)
+├── STT
+├── LLM
+├── TTS
+├── Conversation Context
+└── Tool Calling
+↓
+VISAVA VOICE BACKEND
+↓
+CORE API
+↓
+┌────────┴─────────┐
+↓ ↓
+MongoDB GEO SERVICE
+↓
+Services / Camps / Reports / Users / Helpers
+
+Do NOT duplicate Vapi's responsibilities inside Node.js.
+
+# ==================================================
+FIRST: FULL REPOSITORY AUDIT
+
+Before changing anything, inspect the COMPLETE repository.
+Do not rely only on VOICE-AGENT.md.
+Treat actual source code as the source of truth.
+Inspect:
+voice-agent
+core-api
+geo-service
+Docker Compose
+MongoDB models
+schemas
+routes
+authentication
+services
+seed/sample data
+environment files
+existing Vapi integration
+existing Twilio integration
+existing phone-number configuration
+existing frontend/admin components if they affect the voice workflow
+
+Search the entire project for:
+
+Vapi
+Twilio
+ConversationRelay
+WebSocket
+voice-agent
+assistant
+tool
+function
+transfer
+phone
+report
+helper
+geo
+location
+missing
+emergency
+service
+camp
+
+Create an internal architecture map before implementation.
+
+==================================================
+2. IDENTIFY AND SEPARATE OLD VS NEW VOICE ARCHITECTURE
+The repository previously contained:
+
+Twilio Conversation Relay
+custom WebSocket server
+custom intent parser
+custom conversation state machine
+custom TTS/STT configuration
+
+Determine which parts are now obsolete because Vapi is the voice runtime.
+Do NOT delete working code blindly.
+Instead:
+A. Identify old functionality.
+B. Identify functionality that should move into Vapi.
+C. Identify functionality that must remain in Visava backend.
+D. Refactor the project into a clean Vapi architecture.
+
+The goal is NOT:
+Vapi → old Voice WebSocket → another AI layer
+
+The goal is:
+Vapi → Visava Tool Backend → Core API
+Avoid unnecessary layers.
+
+==================================================
+3. DEFINE THE VAPI ASSISTANT RESPONSIBILITY
+The Vapi assistant is the conversational brain.
+It should understand natural language such as:
+"मला पाणी पाहिजे."
+"मला जवळचा डॉक्टर कुठे मिळेल?"
+"माझा भाऊ हरवला आहे."
+"मला पोलिसांशी बोलायचं आहे."
+"इथे एक माणूस बेशुद्ध पडला आहे."
+"मला राहायला जागा पाहिजे."
+"मला मदतनीशी बोलायचं आहे."
+
+It must not require exact keywords.
+It must handle:
+
+Marathi
+Hindi
+English
+Marathi + English mixed speech
+Marathi + Hindi mixed speech
+natural colloquial speech
+
+Marathi is the primary language.
+
+==================================================
+4. BUILD A REAL VAPI SYSTEM PROMPT
+Create a production-quality Vapi assistant system prompt.
+The prompt must define:
+
+IDENTITY
+You are Visava, a voice assistant created to help Varkaris during Wari.
+
+MISSION
+Help callers access essential Visava services using only a phone call.
+
+CORE PRINCIPLES
+Be calm.
+Be respectful.
+Speak naturally.
+Prefer Marathi.
+Never sound robotic.
+Ask only one question at a time.
+Never overwhelm callers.
+Never expose technical details.
+Never invent services, locations, phone numbers, or report IDs.
+Never claim an action succeeded until the corresponding backend tool confirms success.
+Never fabricate tool results.
+For emergency situations, prioritize speed and human assistance.
+Keep responses short enough for telephone conversations.
+
+VOICE RULES
+No Markdown.
+No bullet lists when speaking.
+No long paragraphs.
+Use spoken Marathi.
+Use natural spoken numbers.
+Avoid technical terminology.
+Do not read MongoDB IDs.
+Do not read JSON.
+Do not mention "API", "database", "tool", "function", "Vapi", or internal architecture to the caller.
+
+CONVERSATION RULE
+Ask one question at a time.
+Example:
+BAD:
+"कुठे आहात, किती वय आहे, आणि त्यांनी कोणते कपडे घातले आहेत?"
+GOOD:
+"तुम्ही सध्या कुठे आहात?"
+Wait for answer.
+Then ask the next required question.
+
+==================================================
+5. VAPI TOOLS — CORE DESIGN
+Do NOT make the Vapi assistant directly manipulate the database.
+All real-world actions must go through secure backend tools.
+Implement tools such as:
+
+resolve_location
+find_nearby_services
+find_nearby_camps
+find_nearby_medical_help
+find_nearby_food
+find_nearby_water
+find_nearby_shelter
+create_missing_person_report
+confirm_report
+create_found_item_report
+create_medical_emergency_report
+find_nearby_helpers
+connect_to_helper
+get_report_status
+optionally send_followup_sms
+optionally get_current_wari_context
+
+Do not create unnecessary duplicate tools.
+Prefer a small number of well-designed tools with clear schemas.
+
+==================================================
+6. TOOL DESIGN RULES
+Every tool must have:
+
+clear name
+clear description
+strict JSON schema
+required fields
+validation
+error handling
+authorization
+useful return structure
+
+Example:
+resolve_location
+Input:
+{
+"spokenLocation": "चंद्रभागा घाटाजवळ",
+"language": "mr"
+}
+Return:
+{
+"success": true,
+"latitude": ...,
+"longitude": ...,
+"displayName": "...",
+"source": "...",
+"confidence": 0.94
+}
+Never silently return fake coordinates.
+
+==================================================
+7. LOCATION RESOLUTION — CRITICAL
+Location is one of the most important parts of the system.
+A caller may say:
+"मी पंढरपूरमध्ये आहे."
+"मी चंद्रभागा घाटाजवळ आहे."
+"मी लोणी काळभोरच्या जवळ आहे."
+"मी पुणे-सोलापूर रोडवर आहे."
+"मी इथे मंदिराजवळ आहे."
+
+The Voice Agent must understand that this is a LOCATION response, not a new intent.
+Create a dedicated location-resolution service.
+Priority order:
+
+explicit latitude/longitude
+known project locations
+known Wari locations
+known camps/services/landmarks
+external geocoding provider if configured
+fallback clarification
+
+Return confidence.
+If confidence is too low:
+DO NOT guess.
+Ask:
+"जवळचं गाव, मंदिर किंवा एखादं ओळखीचं ठिकाण सांगाल का?"
+
+The location layer must be reusable by:
+medical
+food
+water
+shelter
+missing person
+found item
+emergency
+helper handoff
+
+==================================================
+8. CONVERSATION STATE
+Do not implement a second LLM state machine unnecessarily.
+Use Vapi conversation context for conversational continuity.
+Use backend state only for business-critical workflows.
+
+For example, when creating a missing person report, the backend must know:
+which call
+which caller
+which report
+what information has already been collected
+whether confirmation has happened
+
+Introduce a lightweight server-side session model if needed.
+Suggested state:
+{
+callId,
+callerPhone,
+language,
+intent,
+location,
+activeWorkflow,
+collectedInfo,
+pendingReportId,
+pendingConfirmation,
+timestamps
+}
+Do not store entire transcripts unnecessarily.
+
+==================================================
+9. GENERAL CONVERSATION FLOW
+Typical call:
+Caller calls.
+Agent:
+"नमस्कार! मी विसावा. मी तुमची कशी मदत करू?"
+Caller states request.
+Vapi identifies intent.
+If location is required:
+"नक्की. तुम्ही सध्या कुठे आहात?"
+Caller gives location.
+Assistant calls resolve_location.
+Assistant calls the relevant backend tool.
+Assistant receives result.
+Assistant speaks concise result.
+Assistant asks:
+"आणखी काही मदत हवी आहे?"
+Continue naturally.
+
+==================================================
+10. MEDICAL SEARCH FLOW
+User:
+"मला डॉक्टर पाहिजे."
+or:
+"माझी तब्येत खराब आहे."
+
+Determine whether:
+NORMAL MEDICAL SEARCH
+or
+EMERGENCY.
+
+Normal search:
+identify medical intent
+obtain location
+resolve location
+call nearby medical tool
+prioritize nearest available/verified results
+speak top one or two results
+offer to connect/call if appropriate
+
+Example:
+"तुमच्या जवळ एक वैद्यकीय केंद्र सुमारे एक किलोमीटरवर आहे. तुम्हाला त्यांच्याशी जोडू का?"
+Do not read raw API output.
+
+==================================================
+11. MEDICAL EMERGENCY FLOW
+Examples:
+"एक माणूस बेशुद्ध पडला आहे."
+"माझ्या मुलाला खूप गंभीर त्रास आहे."
+"इथे तातडीची वैद्यकीय मदत पाहिजे."
+
+Emergency should trigger an emergency workflow.
+Do NOT ask unnecessary questions.
+
+Priority:
+identify emergency
+get location as quickly as possible
+find emergency medical assistance
+offer human connection
+create medical emergency report if appropriate
+confirm report when required
+trigger alert fan-out
+tell caller what action succeeded
+
+Never provide unsupported medical diagnosis.
+Never pretend to be a doctor.
+Use concise safety-focused language.
+
+==================================================
+12. WATER FLOW
+User:
+"मला खूप तहान लागली आहे."
+"पाणी कुठे मिळेल?"
+
+Assistant:
+understand water intent
+obtain location
+resolve location
+call water tool
+select closest useful water facility
+state distance naturally
+optionally give contact information
+ask whether the caller needs anything else
+
+Do NOT accidentally classify water as food.
+
+==================================================
+13. FOOD FLOW
+Examples:
+"मला जेवण पाहिजे."
+"खायला कुठे मिळेल?"
+"भूक लागली आहे."
+
+Flow:
+intent
+→ location
+→ resolve
+→ nearby food
+→ rank
+→ speak
+
+==================================================
+14. SHELTER FLOW
+Examples:
+"राहायला जागा पाहिजे."
+"विश्रांतीसाठी कुठे थांबता येईल?"
+"शेल्टर कुठे आहे?"
+
+Use:
+service type = shelter
+Search camps/services as appropriate.
+Speak concise results.
+
+==================================================
+15. MISSING PERSON WORKFLOW
+This is a HIGH-PRIORITY workflow.
+The assistant must collect structured information.
+
+Example:
+Caller:
+"माझा भाऊ हरवला आहे."
+Agent:
+"हो, मी मदत करतो. त्यांचे नाव काय आहे?"
+Caller:
+"अमोल."
+Agent:
+"अमोल यांचे अंदाजे वय किती आहे?"
+Caller:
+"वीस."
+Agent:
+"ते शेवटचे कुठे दिसले?"
+Caller:
+"चंद्रभागा घाटाजवळ."
+Agent:
+"त्यांनी कोणते कपडे घातले होते?"
+Caller:
+"पांढरा शर्ट आणि काळी पँट."
+
+Collect where useful:
+name
+age
+gender
+relationship
+clothing
+physical description
+last seen location
+last seen time
+additional identifying information
+
+Do not ask every field if unnecessary.
+When sufficient information is collected:
+summarize naturally:
+"मी माहिती पुन्हा सांगतो. अमोल, अंदाजे वय वीस वर्षे, पांढरा शर्ट आणि काळी पँट, शेवटचे चंद्रभागा घाटाजवळ दिसले. ही माहिती बरोबर आहे का?"
+
+If yes:
+create report.
+Then:
+confirm report.
+
+Only after successful confirmation:
+state report active
+trigger alert/fan-out
+provide confirmation code
+
+If create succeeds but confirmation fails:
+DO NOT say the alert was sent.
+
+==================================================
+16. FOUND ITEM WORKFLOW
+Example:
+"मला एक फोन सापडला आहे."
+
+Collect:
+item type
+description
+identifying details if voluntarily provided
+found location
+approximate time if useful
+
+Then summarize.
+Ask confirmation.
+Create report.
+Confirm report.
+Trigger appropriate fan-out.
+Return confirmation code.
+
+==================================================
+17. REPORT AUTHENTICATION
+Inspect the current Core API authentication system.
+The old Voice Agent workaround involving a fake phone number and OTP must NOT be used as the final architecture.
+Implement proper server-to-server authentication between Voice Backend and Core API.
+
+Preferred approach:
+service-to-service JWT
+or
+dedicated internal API key
+or
+another secure mechanism consistent with the existing system
+
+Requirements:
+no fake OTP
+no hardcoded users
+no hardcoded secrets
+environment-based credentials
+authorization middleware
+clear separation between caller identity and backend service identity
+
+The caller's real phone number should still be preserved as the reporter identity where appropriate.
+
+==================================================
+18. REPORT CONFIRMATION
+Respect the Core API report lifecycle.
+The Voice Agent must understand:
+created
+→ pending
+→ confirmation
+→ confirmed
+→ fan-out
+
+Do not claim:
+"तुमचा रिपोर्ट पूर्ण झाला आहे"
+until backend confirms it.
+
+The confirmation process must be idempotent.
+If the caller repeats "हो", do not create duplicate reports.
+Use report IDs and server-side state to avoid duplicates.
+
+==================================================
+19. HELPER DISCOVERY
+The backend already has a helper role.
+Do not confuse:
+"nearby service"
+with:
+"human helper".
+
+Implement a proper helper lookup.
+Possible ranking:
+available
+correct category
+verified
+nearest
+valid phone number
+
+Return:
+helper id
+name
+phone
+distance
+category
+availability
+
+==================================================
+20. HELPER HANDOFF
+Example:
+Caller:
+"मला मदतनीशी बोलायचं आहे."
+Assistant:
+"नक्की. कोणत्या प्रकारची मदत हवी आहे?"
+Caller:
+"वैद्यकीय."
+Assistant:
+find helper
+Then:
+"मी तुम्हाला जवळच्या मदतनीशी जोडत आहे. कृपया थांबा."
+
+Use Vapi's supported transfer-call capability where appropriate rather than trying to recreate call transfer with custom WebSocket logic. Use the Vapi MCP to verify exactly how transfer capability is configured.
+
+Handle:
+helper found
+helper unavailable
+transfer failure
+invalid number
+fallback helper
+no helper
+
+Never leave the caller hanging.
+
+==================================================
+21. VAPI SERVER TOOL IMPLEMENTATION
+Build the Visava backend endpoints that Vapi custom tools invoke.
+For example:
+POST /api/v1/voice/tools
+or separate endpoints such as:
+POST /api/v1/voice/tools/resolve-location
+POST /api/v1/voice/tools/find-nearby
+POST /api/v1/voice/tools/create-report
+POST /api/v1/voice/tools/confirm-report
+POST /api/v1/voice/tools/find-helper
+
+Choose a clean architecture.
+Vapi custom tools should NOT directly access MongoDB.
+They should call application services.
+
+Architecture:
+Vapi
+↓
+Voice Tool Controller
+↓
+Voice Tool Service
+↓
+Core API Service
+↓
+Database / Geo Service
+
+If the Voice Agent itself is inside the same backend, avoid needless HTTP hops and reuse internal services.
+
+==================================================
+22. VAPI TOOL RESPONSE DESIGN
+Tool responses must be concise, structured and model-friendly.
+Example:
+{
+"success": true,
+"results": [
+{
+"name": "Sant Dnyaneshwar Medical Camp",
+"distanceKm": 0.8,
+"phone": "...",
+"available": true
+}
+]
+}
+
+Errors:
+{
+"success": false,
+"errorCode": "NO_RESULTS",
+"message": "No nearby water facility found"
+}
+
+Do not return enormous database objects.
+Do not return internal IDs unless needed by subsequent backend actions.
+
+==================================================
+23. RESULT RANKING
+Nearby result ranking should consider:
+distance
+available
+verified
+service type
+operational status
+contactability
+
+Remove duplicates across services and camps.
+Return the most useful results.
+Normally return 1–3 results.
+Do not read ten locations to a caller.
+
+==================================================
+24. NO RESULT VS BACKEND FAILURE
+These are different.
+NO RESULTS:
+"तुमच्या जवळ सध्या पाण्याची सुविधा सापडली नाही."
+BACKEND FAILURE:
+"माफ करा, सध्या सेवा शोधण्यात अडचण येत आहे."
+
+Log the technical error.
+Never expose stack traces or internal details.
+
+==================================================
+25. RADIUS FALLBACK
+For non-emergency discovery:
+Example:
+5 km
+→ no result
+→ expand to 10 km
+→ no result
+→ explain
+
+For emergency:
+Use the safest configured emergency radius strategy.
+Make radius configurable.
+Do not hardcode arbitrary values everywhere.
+
+==================================================
+26. CALLER IDENTITY
+The caller's phone number is important.
+Use the phone number provided by the phone/Vapi call metadata where available.
+Do not ask for the phone number unnecessarily.
+
+For reports:
+caller phone should be attached server-side.
+Never allow the LLM to fabricate the caller phone number.
+Never trust caller-provided identity fields when authoritative call metadata exists.
+
+==================================================
+27. CALL CONTEXT
+Use Vapi call metadata and dynamic variables where appropriate.
+Useful dynamic context may include:
+callerPhone
+callId
+language
+wariId
+knownLocation
+userId
+environment
+
+Do not put sensitive credentials into assistant variables.
+Use dynamic variables only for contextual data.
+
+==================================================
+28. WEBHOOK / SERVER EVENT HANDLING
+Implement secure Vapi server endpoints.
+Handle relevant events such as:
+call started/status
+transcript events where needed
+tool calls
+end-of-call report
+transfer-related events
+failure events
+
+Do not perform expensive unnecessary processing on every transcript event.
+Tool calls must return results quickly and reliably.
+
+==================================================
+29. IDEMPOTENCY
+This is critical.
+Voice agents can repeat requests.
+For example:
+Caller says:
+"हो"
+Vapi may invoke the same action again if context is ambiguous.
+Report creation must use idempotency protection.
+A report must not be duplicated because:
+caller repeats themselves
+assistant retries
+HTTP request retries
+webhook retries
+network retry occurs
+
+Use:
+callId
+workflowId
+idempotencyKey
+or equivalent.
+
+==================================================
+30. INTERRUPTION HANDLING
+The user may interrupt:
+Assistant:
+"तुमच्या जवळ..."
+Caller:
+"थांबा, मला दुसरं विचारायचं आहे."
+The assistant should gracefully change context.
+Do not continue reading stale information.
+
+==================================================
+31. CHANGE OF INTENT
+Support:
+Caller:
+"मला पाणी पाहिजे."
+Assistant starts flow.
+Caller:
+"नाही, आधी डॉक्टर कुठे आहेत ते सांगा."
+The assistant should switch to medical.
+Do not become trapped in the previous workflow.
+
+==================================================
+32. GLOBAL COMMANDS
+Understand:
+"रद्द करा"
+"थांबा"
+"परत"
+"पुन्हा सांगा"
+"मला समजलं नाही"
+"मला माणसाशी बोलायचं आहे"
+"हो"
+"नाही"
+"नको"
+
+These should work naturally.
+
+==================================================
+33. CONVERSATIONAL SAFETY
+The assistant is NOT a doctor, police officer, legal authority, or emergency dispatcher unless the project explicitly integrates such a service.
+Never diagnose.
+Never invent medical treatment.
+Never promise emergency response unless an actual backend action has succeeded.
+Never fabricate a location.
+Never fabricate availability.
+Never fabricate a helper.
+Never fabricate a report number.
+
+==================================================
+34. PRIVACY
+Missing-person and emergency information can be sensitive.
+Minimize stored personal data.
+Do not log complete sensitive descriptions unnecessarily.
+Do not include secrets in logs.
+Do not expose one caller's report to another caller.
+Do not let tools retrieve arbitrary private database records.
+Enforce authorization server-side.
+
+==================================================
+35. OBSERVABILITY
+Every call should be traceable.
+Use correlation fields:
+callId
+sessionId
+toolCallId
+requestId
+reportId
+
+Log:
+call started
+intent/tool action
+location-resolution result
+API request result
+report created
+report confirmed
+fan-out triggered
+helper lookup
+transfer attempt
+call ended
+errors
+
+Do not log secrets.
+
+==================================================
+36. ERROR RECOVERY
+Handle:
+Vapi tool timeout
+Core API unavailable
+Geo Service unavailable
+MongoDB unavailable
+location unresolved
+no services
+no helper
+transfer failure
+report creation failure
+confirmation failure
+invalid caller input
+
+Always produce a user-friendly spoken fallback.
+Example:
+"माफ करा, सध्या मला सेवा शोधता येत नाही. तुम्हाला पुन्हा प्रयत्न करायचा आहे का?"
+
+==================================================
+37. TESTING — DO NOT SKIP
+Create automated tests for:
+Intent scenarios
+Location resolution
+Nearby search
+No-result behavior
+API failure
+Report creation
+Report confirmation
+Idempotency
+Missing person
+Found item
+Medical emergency
+Helper discovery
+Change of intent
+Confirmation handling
+
+==================================================
+38. CREATE A CONVERSATION TEST HARNESS
+Create a local test harness that simulates a Vapi conversation without requiring a real phone.
+
+Example scenarios:
+SCENARIO 1
+User:
+"मला पाणी पाहिजे."
+User:
+"पंढरपूरमध्ये आहे."
+Expected:
+water search
+
+SCENARIO 2
+User:
+"मला डॉक्टर पाहिजे."
+User:
+"चंद्रभागा घाटाजवळ."
+Expected:
+medical search
+
+SCENARIO 3
+User:
+"माझा भाऊ हरवला आहे."
+Expected:
+missing-person workflow
+
+SCENARIO 4
+User:
+"मला फोन सापडला आहे."
+Expected:
+found-item workflow
+
+SCENARIO 5
+User:
+"इथे एक माणूस बेशुद्ध आहे."
+Expected:
+emergency workflow
+
+SCENARIO 6
+User:
+"मला मदतनीशी बोलायचं आहे."
+Expected:
+helper discovery + transfer
+
+SCENARIO 7
+Backend unavailable.
+Expected:
+natural fallback
+
+==================================================
+39. VAPI CONFIGURATION (VIA VAPI MCP)
+IMPORTANT: Use the configured Vapi MCP in Antigravity to retrieve, verify, and update the Vapi assistant configuration. The API keys (private token, public token) are already attached to the MCP server.
+
+Configure:
+system prompt
+first message
+language behavior
+voice
+tools
+server URL
+tool credentials
+transfer tool
+end call tool
+interruption behavior
+appropriate model
+appropriate speech settings
+
+Do not hardcode provider-specific assumptions if Vapi already handles the abstraction.
+Leverage the MCP to dynamically fetch the required settings or push the new assistant configuration without guessing the payload shapes.
+The assistant should prioritize low latency and natural voice interaction.
+
+==================================================
+40. PHONE NUMBER
+Verify that the Vapi phone number is connected to the correct assistant.
+For international/India phone usage, inspect the existing Twilio/Vapi phone-number integration.
+Do not assume a free Vapi number is suitable for India.
+Use the project's actual imported Twilio number when required.
+Verify inbound call routing.
+
+==================================================
+41. LOCAL DEVELOPMENT
+The repository must remain easy to run locally.
+Provide exact commands.
+Example categories:
+install
+environment setup
+start infrastructure
+start core-api
+start geo-service
+start voice backend
+run tests
+run tool tests
+run Docker
+
+For local Vapi webhook testing, provide an appropriate public HTTPS tunnel configuration.
+Do NOT pretend Vapi can reach localhost directly.
+
+==================================================
+42. ENVIRONMENT VARIABLES
+Review all required environment variables.
+Separate:
+Vapi credentials
+Twilio credentials
+Core API credentials
+Geo Service configuration
+database configuration
+server secrets
+
+Use .env.example.
+Never commit real secrets.
+Document every new environment variable.
+
+==================================================
+43. REMOVE TECHNICAL DUPLICATION
+After the Vapi migration, identify dead code.
+Potentially obsolete components include:
+custom STT logic
+custom TTS logic
+duplicate conversation handling
+duplicate intent handling
+custom Twilio Conversation Relay WebSocket
+
+Do NOT delete anything until references are checked.
+Then remove or isolate obsolete code so the architecture is clear.
+
+The final project must make it obvious:
+Vapi = voice AI
+Visava backend = business logic/tools
+Core API = platform backend
+Geo Service = geospatial logic
+MongoDB = persistence
+
+==================================================
+44. IMPORTANT: KEEP BUSINESS LOGIC OUT OF THE PROMPT
+Do not depend entirely on instructions such as:
+"Remember to confirm reports."
+Business-critical guarantees must exist in backend code.
+
+For example:
+The prompt can tell Vapi:
+"Always confirm the caller's report."
+But the backend must ALSO prevent:
+pending report
+→ accidentally treated as confirmed
+
+Prompt = behavior.
+Backend = guarantee.
+
+==================================================
+45. IMPORTANT: DON'T USE AN LLM FOR EVERYTHING
+Use Vapi's LLM for:
+understanding natural language
+conversational reasoning
+extracting information
+deciding which tool to call
+handling ambiguity
+
+Use deterministic backend code for:
+report creation
+authorization
+confirmation
+location validation
+ranking
+database changes
+alert fan-out
+helper selection
+idempotency
+security
+
+Never allow an LLM to directly perform privileged database operations.
+
+==================================================
+46. END-TO-END SUCCESS CRITERIA
+The implementation should be considered successful only if these scenarios work.
+
+==================================================
+SCENARIO A — WATER
+Caller:
+"नमस्कार, मला खूप तहान लागली आहे."
+Assistant understands water.
+Assistant:
+"नक्की. तुम्ही सध्या कुठे आहात?"
+Caller:
+"पंढरपूरमध्ये, चंद्रभागा घाटाजवळ."
+Assistant:
+resolve_location
+↓
+find_nearby_water
+↓
+response
+Assistant:
+"तुमच्या जवळ सुमारे एक किलोमीटरवर पाण्याची सुविधा आहे. तुम्हाला तिच्याशी जोडू का?"
+
+==================================================
+SCENARIO B — MEDICAL
+Caller:
+"माझ्या पायाला खूप दुखतengeत आहे. डॉक्टर कुठे मिळतील?"
+Assistant:
+understands medical.
+asks location.
+finds nearby medical service.
+speaks result.
+
+==================================================
+SCENARIO C — MISSING PERSON
+Caller:
+"माझा भाऊ हरवला आहे."
+Assistant collects:
+name
+age
+description
+last seen location
+Assistant summarizes.
+Caller confirms.
+Backend:
+create report
+→ confirm report
+→ geo fan-out
+Assistant:
+"तुमची माहिती नोंदवली गेली आहे. तुमचा संदर्भ क्रमांक ... आहे."
+
+==================================================
+SCENARIO D — FOUND ITEM
+Caller:
+"मला एक फोन सापडला आहे."
+Assistant collects description and location.
+Assistant summarizes.
+Caller confirms.
+Backend creates and confirms report.
+
+==================================================
+SCENARIO E — EMERGENCY
+Caller:
+"इथे एक माणूस बेशुद्ध पडला आहे."
+Assistant prioritizes emergency.
+Get location.
+Find medical/emergency support.
+Create emergency report if supported.
+Confirm/activate.
+Offer human help.
+No unnecessary questioning.
+
+==================================================
+SCENARIO F — HUMAN HELP
+Caller:
+"मला मदतनीशी बोलायचं आहे."
+Assistant finds nearby helper.
+Uses Vapi transfer capability.
+If transfer fails:
+offer fallback.
+
+==================================================
+47. QUALITY BAR
+The final result should NOT feel like:
+"AI demo"
+It should feel like:
+"real public-service phone assistant."
+
+A caller should never need to understand:
+Vapi
+API
+MongoDB
+tool calls
+coordinates
+JSON
+backend
+authentication
+technical errors
+
+Everything technical must remain behind the scenes.
+
+==================================================
+48. IMPLEMENTATION REQUIREMENT
+Do not stop after analysis.
+Actually:
+modify code
+create services
+create controllers
+create schemas
+create Vapi tools
+configure assistant (using Vapi MCP)
+implement authentication
+implement location resolution
+implement report lifecycle
+implement helper handling
+implement tests
+run tests
+run typecheck
+run build
+verify Docker
+verify integrations where credentials permit
+
+If something cannot be tested locally, you MUST use the attached Vapi MCP in Antigravity to interact with Vapi, push configurations, and verify settings, as the tokens are already present.
+If a physical phone test is still required:
+mark it clearly as:
+IMPLEMENTED — EXTERNAL VERIFICATION REQUIRED
+Never claim successful external verification without actually performing it.
+
+==================================================
+49. FINAL VALIDATION COMMANDS
+Run as appropriate:
+npm run typecheck
+npm run build
+npm test
+Docker build
+Docker compose validation
+API integration tests
+Voice tool tests
+Conversation tests
+
+Then inspect changed files for regressions.
+
+==================================================
+50. FINAL REPORT FORMAT
+At the end report:
+
+Current architecture
+Old architecture removed/replaced
+Vapi architecture implemented
+Vapi assistant configuration (fetched/applied via MCP)
+Tools created
+Backend endpoints created
+Authentication approach
+Location resolution
+Medical workflow
+Water workflow
+Food workflow
+Shelter workflow
+Missing-person workflow
+Found-item workflow
+Emergency workflow
+Helper workflow
+Transfer implementation
+Report confirmation lifecycle
+Idempotency
+Error handling
+Tests
+Build status
+Docker status
+External credentials/configuration still required
+Exact commands to run everything
+
+For every feature clearly mark:
+✅ VERIFIED
+⚠️ IMPLEMENTED — NEEDS EXTERNAL VAPI/TWILIO VERIFICATION
+❌ NOT IMPLEMENTED
+
+==================================================
+FINAL NON-NEGOTIABLE REQUIREMENT
+The final system must be a Vapi-powered voice assistant where Vapi handles the conversational AI and Visava handles the actual platform actions. You MUST use the provided Vapi MCP to interact directly with Vapi rather than blindly assuming configurations.
+The caller should be able to call a phone number and naturally say things like:
+"मला पाणी पाहिजे."
+"जवळ डॉक्टर कुठे आहेत?"
+"माझा भाऊ हरवला आहे."
+"मला एक फोन सापडला."
+"इथे एक माणूस बेशुद्ध आहे."
+"मला मदतनीशी बोलायचं आहे."
+
+The system must understand the caller, collect only the information it genuinely needs, call the appropriate secure backend tool, use real Visava data, perform the actual backend action, confirm success, and communicate the result naturally in Marathi.
+Do not build a fake demo.
+Build the real end-to-end system.

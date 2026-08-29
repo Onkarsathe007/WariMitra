@@ -79,15 +79,15 @@ No matter what phone a Varkari carries, they should be one call or one tap away 
 |---------|------|------|---------|
 | **Core API** | Node.js + Express + TypeScript | 3000 | Business logic, CRUD, auth, reports |
 | **Geo Service** | Go + chi router | 8081 | Location tracking, radius queries, WebSocket hub |
-| **Voice Agent** | Node.js + Express | 4000 | Vapi voice AI webhook server |
+| **Voice Agent** | Node.js + Express + WebSocket | 4000 (HTTP), 4001 (WS) | Twilio Conversation Relay voice agent |
 | **MongoDB** | Mongo 7.0 | 27017 | Primary database |
 | **Redis** | Redis 7 | 6379 | Live location cache, pub/sub |
 
 ### Data Flow
 
 ```
-Phone Call → Vapi (STT/LLM/TTS) → Voice Agent (tool webhook) → Core API (HTTP)
-                                                                     ↓
+Phone Call → Twilio → Voice Agent (webhook) → Conversation Relay (WebSocket)
+                                                     ↓
 Voice Agent → Core API (HTTP) → MongoDB (data)
                              → Geo Service (radius queries)
                              → Redis (live locations)
@@ -96,15 +96,75 @@ Smartphone → Web App → Core API (REST + Socket.IO) → MongoDB
                                                     → Geo Service (WebSocket)
 ```
 
-### Voice Agent Flow (Vapi)
+### Voice Agent Flow (Twilio Conversation Relay)
 
 ```
 1. Varkari calls helpline number
-2. Vapi receives call → LLM processes speech with system prompt
-3. LLM decides to use a tool → Vapi POSTs to our webhook
-4. Voice Agent calls Core API → returns result to Vapi
-5. Vapi LLM generates response → TTS plays to caller
-6. Loop continues until end session or transfer
+2. Twilio receives call → hits POST /voice/inbound
+3. Returns TwiML:
+   <Connect>
+     <ConversationRelay 
+       url="wss://server/websocket"
+       welcomeGreeting="नमस्कार! मदत हवी का?"
+       language="mr-IN"
+       ttsProvider="Google"
+       voice="mr-IN-Standard-A"
+     />
+   </Connect>
+4. Twilio opens WebSocket to voice-agent
+5. Caller speaks → Twilio STT → sends prompt JSON to WebSocket
+6. Voice Agent parses intent → calls Core API for lookups
+7. Voice Agent sends text back → Twilio TTS → caller hears response
+8. Loop continues until end session or call transfer
+```
+
+### WebSocket Protocol (Conversation Relay)
+
+**Receive from Twilio:**
+```json
+{ "type": "setup", "sessionId": "...", "callSid": "CA...", "from": "+91..." }
+{ "type": "prompt", "voicePrompt": "मला औषध हवं", "lang": "mr-IN", "last": true }
+{ "type": "interrupt", "utteranceUntilInterrupt": "मला...", "durationUntilInterruptMs": 460 }
+```
+
+**Send to Twilio:**
+```json
+{ "type": "text", "token": "हो भाऊ! जवळच्या औषधालयात मिळेल.", "last": true }
+{ "type": "sendDigits", "digits": "9www1234567890" }
+{ "type": "end", "handoffData": "{\"reason\": \"resolved\"}" }
+```
+
+### Supported Languages
+
+| Language | Code | TTS Voice | STT Provider |
+|----------|------|-----------|--------------|
+| Marathi | mr-IN | Google mr-IN-Standard-A | Google |
+| Hindi | hi-IN | ElevenLabs IvLWq57RKibBrqZGpQrC | Google |
+| English | en-US | ElevenLabs UgBBYS2sOqTuMpoF3BR0 | Google |
+
+### Intent Detection
+
+The voice agent parses caller speech to detect intent:
+
+| Intent | Keywords (Marathi) | Action |
+|--------|-------------------|--------|
+| `find_medical` | औषध, डॉक्टर, हॉस्पिटल | Search nearby medical camps/services |
+| `find_food` | अन्न, जेवण, भूक | Search nearby food points |
+| `find_water` | पाणी, तहान | Search nearby water points |
+| `find_shelter` | राहणीमान, शेळी | Search nearby shelter |
+| `report_missing_person` | हरवलेला, सापडत नाही, शोधा | Create missing person report |
+| `report_found_item` | सापडलेली, वस्तू | Create found item report |
+| `connect_helper` | जोडा, कॉल, बोला | Transfer call to helper |
+| `greeting` | नमस्कार, हैलो | Welcome message |
+
+### Conversation State Machine
+
+```
+GREETING → AWAIT_INTENT → AWAIT_LOCATION → PROCESS → RESPOND → (loop or end)
+                                     ↑
+                    AWAIT_MISSING_PERSON_INFO
+                    AWAIT_FOUND_ITEM_INFO
+                    AWAIT_CONNECT_INFO
 ```
 
 ---
@@ -162,11 +222,13 @@ Smartphone → Web App → Core API (REST + Socket.IO) → MongoDB
 
 ### Voice Agent (port 4000)
 
-**Vapi Tool Webhooks:**
-- `POST /tools/find-services` — Search nearby services
-- `POST /tools/create-report` — Create report
-- `POST /tools/find-camps` — Search nearby camps
-- `POST /tools/transfer-to-helper` — Transfer call
+**Twilio Webhooks:**
+- `POST /voice/inbound` — Incoming call handler (returns TwiML)
+- `POST /voice/connect-action` — Post-connect action callback
+- `POST /voice/outbound` — Initiate outbound call
+
+**WebSocket:**
+- `wss://server:4001/websocket` — Conversation Relay WebSocket
 
 **Health:**
 - `GET /health` — Health check
@@ -177,7 +239,7 @@ Smartphone → Web App → Core API (REST + Socket.IO) → MongoDB
 
 ### Prerequisites
 - Docker + Docker Compose
-- Vapi account (for voice AI)
+- Twilio account (for phone number and Conversation Relay)
 - Node.js 22+ (for local dev)
 - Go 1.22+ (for local dev)
 
@@ -187,7 +249,7 @@ Smartphone → Web App → Core API (REST + Socket.IO) → MongoDB
 cp core-api/.env.example core-api/.env
 cp geo-service/.env.example geo-service/.env
 cp voice-agent/.env.example voice-agent/.env
-# Edit core-api/.env and voice-agent/.env with your credentials
+# Edit core-api/.env and voice-agent/.env with your Twilio credentials
 
 # Run everything with Docker
 ./run.sh up          # Linux/Mac
@@ -283,17 +345,20 @@ visava/
 │       ├── middleware/            # logging, CORS
 │       └── ws/                    # WebSocket hub
 │
-└── voice-agent/                   # Node.js + Vapi voice AI
+└── voice-agent/                   # Node.js + Twilio Conversation Relay
     ├── package.json
     ├── tsconfig.json
     ├── Dockerfile
     └── src/
-        ├── index.ts               # Express server (Vapi tool webhooks)
+        ├── index.ts               # Express server (Twilio webhooks)
         ├── server.ts              # Entry point
         ├── config/                # env.ts
         ├── services/
+        │   ├── websocket.ts       # Conversation Relay WebSocket handler
+        │   ├── conversation.ts    # Multi-turn conversation state machine
+        │   ├── intentParser.ts    # Marathi/Hindi/English intent detection
         │   └── coreApi.ts         # Core API client
-        ├── types/                 # VapiToolCallRequest/Response, args types
+        ├── types/                 # ConversationState, Intent, etc.
         └── utils/                 # logger
 ```
 
@@ -307,13 +372,13 @@ visava/
 | **TECHNICAL-PLAN.md** | Architecture decisions, tech choices, infrastructure rationale |
 | **CORE-API.md** | Core API endpoints, data models, auth flow, confirmation gate |
 | **GEO-SERVICE.md** | Geo Service API, Redis GEO internals, WebSocket hub, fan-out flow |
-| **VOICE-AGENT.md** | Vapi tool webhooks, assistant setup, phone number config |
+| **VOICE-AGENT.md** | Conversation Relay setup, intent detection, state machine, Twilio config |
 
 ---
 
 ## Key Decisions
 
-1. **Vapi** for voice — a managed voice AI platform that handles STT, LLM, and TTS in one service. Voice Agent becomes a thin webhook server for tool calls.
+1. **Twilio Conversation Relay** for voice — handles STT (Google Deepgram) and TTS (Google/ElevenLabs) natively, no external providers needed
 2. **Marathi-first** — default language is Marathi (mr-IN), with Hindi and English as options
 3. **WebSocket for voice** — Conversation Relay uses WebSocket for real-time bidirectional communication
 4. **Intent-based routing** — keyword matching for Marathi/Hindi/English to detect caller intent

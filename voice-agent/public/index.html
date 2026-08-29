@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visava Voice Agent Web Client</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        h1 { color: #333; }
+        p { color: #666; margin-bottom: 2rem; }
+        .controls {
+            display: flex;
+            gap: 1rem;
+        }
+        button {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        #startBtn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #startBtn:hover { background-color: #45a049; }
+        #stopBtn {
+            background-color: #f44336;
+            color: white;
+        }
+        #stopBtn:hover { background-color: #da190b; }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            color: #666666;
+        }
+        #status {
+            margin-top: 1.5rem;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+        .status-active { color: #4CAF50; }
+        .status-inactive { color: #f44336; }
+    </style>
+</head>
+<body>
+
+    <h1>Visava Web Voice Agent</h1>
+    <p>Test the Vapi Assistant directly from your browser.</p>
+
+    <div class="controls">
+        <button id="startBtn">Start Call</button>
+        <button id="stopBtn" disabled>Stop Call</button>
+    </div>
+
+    <div id="status" class="status-inactive">Disconnected</div>
+
+    <!-- Vapi SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web/dist/vapi.bundle.js"></script>
+    <script>
+        // Use the Public API Key provided by the user
+        const vapi = new window.Vapi("4ad7d6f5-9ecd-46d9-9b6e-91cad18b0bdb");
+
+        const startBtn = document.getElementById("startBtn");
+        const stopBtn = document.getElementById("stopBtn");
+        const statusEl = document.getElementById("status");
+
+        // The Assistant ID will be injected here if we configure a specific one
+        // For now, if left empty or with a specific ID, it will trigger the assistant.
+        // Replace 'ASSISTANT_ID' with the actual ID once created.
+        const ASSISTANT_ID = ""; // We will update this later
+
+        startBtn.addEventListener("click", () => {
+            statusEl.textContent = "Connecting...";
+            statusEl.className = "";
+            startBtn.disabled = true;
+            
+            if (ASSISTANT_ID) {
+                vapi.start(ASSISTANT_ID);
+            } else {
+                alert("Please configure an ASSISTANT_ID in index.html first.");
+                startBtn.disabled = false;
+            }
+        });
+
+        stopBtn.addEventListener("click", () => {
+            vapi.stop();
+        });
+
+        vapi.on("call-start", () => {
+            statusEl.textContent = "Call Active (Listening/Speaking)";
+            statusEl.className = "status-active";
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+        });
+
+        vapi.on("call-end", () => {
+            statusEl.textContent = "Disconnected";
+            statusEl.className = "status-inactive";
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        });
+
+        vapi.on("error", (error) => {
+            console.error("Vapi Error:", error);
+            statusEl.textContent = "Error: " + error.message;
+            statusEl.className = "status-inactive";
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>

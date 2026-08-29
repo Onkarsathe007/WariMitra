@@ -1,0 +1,99 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: visava-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - visava-network
+
+  core-api:
+    build:
+      context: ./core-api
+      dockerfile: Dockerfile
+    container_name: visava-core-api
+    ports:
+      - "3000:3000"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./core-api/.env
+    environment:
+      REDIS_URL: redis://redis:6379
+      GEO_SERVICE_URL: http://geo-service:8081
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - visava-network
+
+  geo-service:
+    build:
+      context: ./geo-service
+      dockerfile: Dockerfile
+    container_name: visava-geo-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./geo-service/.env
+    environment:
+      REDIS_URL: redis://redis:6379
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - visava-network
+
+  voice-agent:
+    build:
+      context: ./voice-agent
+      dockerfile: Dockerfile
+    container_name: visava-voice-agent
+    ports:
+      - "4000:4000"
+      - "4001:4001"
+    depends_on:
+      core-api:
+        condition: service_healthy
+    env_file:
+      - ./voice-agent/.env
+    environment:
+      CORE_API_URL: http://core-api:3000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - visava-network
+
+networks:
+  visava-network:
+    driver: bridge
+
+volumes:
+  redis_data:
