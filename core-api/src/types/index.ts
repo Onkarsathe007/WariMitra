@@ -4,9 +4,16 @@ export type UserRole = "varkari" | "helper" | "admin";
 
 export interface IUser {
   _id: Types.ObjectId;
-  phoneNumber: string;
+  phoneNumber?: string;
+  email?: string;
+  googleId?: string;
   role: UserRole;
   name?: string;
+  avatar?: string;
+  age?: number;
+  gender?: "male" | "female" | "other";
+  city?: string;
+  profileComplete: boolean;
   verified: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -105,5 +112,6 @@ export interface IService {
 export interface JwtPayload {
   userId: string;
   role: UserRole;
-  phoneNumber: string;
+  phoneNumber?: string;
+  email?: string;
 }

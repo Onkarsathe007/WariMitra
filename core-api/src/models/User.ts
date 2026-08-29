@@ -7,9 +7,23 @@ const UserSchema = new Schema<UserDocument>(
   {
     phoneNumber: {
       type: String,
-      required: true,
       unique: true,
+      sparse: true,
       trim: true,
+      index: true,
+    },
+    email: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      lowercase: true,
+      index: true,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
       index: true,
     },
     role: {
@@ -22,6 +36,27 @@ const UserSchema = new Schema<UserDocument>(
       type: String,
       trim: true,
     },
+    avatar: {
+      type: String,
+      trim: true,
+    },
+    age: {
+      type: Number,
+      min: 1,
+      max: 150,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+    },
+    city: {
+      type: String,
+      trim: true,
+    },
+    profileComplete: {
+      type: Boolean,
+      default: false,
+    },
     verified: {
       type: Boolean,
       default: false,
@@ -32,5 +67,6 @@ const UserSchema = new Schema<UserDocument>(
 
 UserSchema.index({ role: 1 });
 UserSchema.index({ verified: 1 });
+UserSchema.index({ profileComplete: 1 });
 
 export const User = mongoose.model<UserDocument>("User", UserSchema);
