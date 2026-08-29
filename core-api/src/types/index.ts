@@ -78,6 +78,7 @@ export interface ICamp {
     coordinates: [number, number]; // [lng, lat]
   };
   description?: string;
+  city?: string;
   contactPhone?: string;
   operatingHours?: string;
   services: string[];

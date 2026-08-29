@@ -62,12 +62,11 @@ export const handleVapiTools = async (req: Request, res: Response): Promise<void
                 break;
               }
 
-              let items = [];
-              if (name === "find_nearby_camps") {
-                items = await findNearbyCamps(serviceType, coords.lat, coords.lng, 50);
-              } else {
-                items = await findNearbyServices(serviceType, coords.lat, coords.lng, 50);
-              }
+              const [campItems, serviceItems] = await Promise.all([
+                findNearbyCamps(serviceType, coords.lat, coords.lng, 50),
+                findNearbyServices(serviceType, coords.lat, coords.lng, 50)
+              ]);
+              const items = [...campItems, ...serviceItems];
 
               if (items.length > 0) {
                 const topItem = items[0];
