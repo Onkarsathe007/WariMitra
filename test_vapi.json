@@ -1,0 +1,20 @@
+{
+  "message": {
+    "type": "tool-calls",
+    "call": {
+      "assistantId": "7bb66519-cb22-4cf8-9a3c-8701f9200625"
+    },
+    "toolWithToolCallList": [
+      {
+        "toolCall": {
+          "type": "function",
+          "id": "call_123",
+          "function": {
+            "name": "find_nearby_services",
+            "arguments": "{\"location_text\":\"Pandharpur\", \"type\":\"food\"}"
+          }
+        }
+      }
+    ]
+  }
+}
