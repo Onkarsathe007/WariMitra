@@ -100,6 +100,33 @@ Now that the assistants are configured with their database tools, we need to lin
 
 ---
 
+## Step 6: (Optional) Setup MCP Server for AI Debugging
+
+If you are using an AI agent (like Claude, Antigravity, or Cursor) to manage your Vapi environment locally via the Model Context Protocol (MCP), you must pass the Vapi keys to the MCP server configuration.
+
+In your MCP settings file (e.g., `cline_mcp_settings.json` or `claude_desktop_config.json`), configure the `vapi` server like this:
+
+```json
+{
+  "mcpServers": {
+    "vapi": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@vapi-ai/mcp-server"
+      ],
+      "env": {
+        "VAPI_PUBLIC_KEY": "your_vapi_public_key_here",
+        "VAPI_PRIVATE_KEY": "your_vapi_private_key_here"
+      }
+    }
+  }
+}
+```
+*Note: Make sure to replace the placeholder strings with your actual Vapi keys!*
+
+---
+
 ## 🎯 You're Done!
 
 You can now call your phone number. The Marathi agent will answer. If you reply in Hindi, it will seamlessly hand off to the Hindi agent, which will then query your local MongoDB database via Ngrok to provide real-time Wari updates!
