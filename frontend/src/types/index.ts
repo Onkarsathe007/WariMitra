@@ -11,6 +11,7 @@ export interface Service {
   address?: string;
   description?: string;
   contactPhone?: string;
+  city?: string;
   available: boolean;
   media: string[];
   verified: boolean;

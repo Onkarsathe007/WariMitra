@@ -11,6 +11,7 @@ import { NearestCampCard } from './components/NearestCampCard';
 import { BottomNavigation } from './components/BottomNavigation';
 import { ProfilePage } from './components/ProfilePage';
 import { OfferHelpPage } from './components/OfferHelpPage';
+import { NotificationProvider } from './context/NotificationContext';
 import type { TabType } from './types';
 
 type Page = 'landing' | 'role-select' | 'google-login' | 'profile-complete' | 'app';
@@ -32,6 +33,7 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState<TabType>('map');
+  const [activeLocation, setActiveLocation] = useState<any>(null);
 
   useEffect(() => {
     const savedToken = localStorage.getItem('visava_token');
@@ -118,39 +120,41 @@ function App() {
   }
 
   return (
-    <div className="app-container">
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
-        <MapView />
-        <div className="ui-layer" style={{ display: currentTab === 'map' ? 'flex' : 'none' }}>
-          <Header />
-          <SearchBar />
-          <MapControls />
-          <NearestCampCard />
+    <NotificationProvider>
+      <div className="app-container">
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+          <MapView onMarkerClick={setActiveLocation} />
+          <div className="ui-layer" style={{ display: currentTab === 'map' ? 'flex' : 'none' }}>
+            <Header />
+            <SearchBar />
+            <MapControls />
+            <NearestCampCard activeLocation={activeLocation} onClose={() => setActiveLocation(null)} />
+          </div>
+        </div>
+
+        {currentTab === 'profile' && (
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 10 }}>
+            <ProfilePage user={user} onLogout={handleLogout} />
+          </div>
+        )}
+
+        {currentTab === 'help' && (
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 10 }}>
+            <OfferHelpPage />
+          </div>
+        )}
+
+        {currentTab === 'explore' && (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, position: 'absolute', width: '100%', height: '100%', pointerEvents: 'none' }}>
+            <p className="text-secondary glass-panel" style={{ padding: '8px 16px', pointerEvents: 'auto' }}>Coming Soon</p>
+          </div>
+        )}
+
+        <div className="ui-layer" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 100 }}>
+          <BottomNavigation currentTab={currentTab} onTabChange={setCurrentTab} />
         </div>
       </div>
-
-      {currentTab === 'profile' && (
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 10 }}>
-          <ProfilePage user={user} onLogout={handleLogout} />
-        </div>
-      )}
-
-      {currentTab === 'help' && (
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 10 }}>
-          <OfferHelpPage />
-        </div>
-      )}
-
-      {currentTab === 'explore' && (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, position: 'absolute', width: '100%', height: '100%', pointerEvents: 'none' }}>
-          <p className="text-secondary glass-panel" style={{ padding: '8px 16px', pointerEvents: 'auto' }}>Coming Soon</p>
-        </div>
-      )}
-
-      <div className="ui-layer" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 100 }}>
-        <BottomNavigation currentTab={currentTab} onTabChange={setCurrentTab} />
-      </div>
-    </div>
+    </NotificationProvider>
   );
 }
 

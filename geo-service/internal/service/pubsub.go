@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/redis/go-redis/v9"
@@ -21,11 +22,17 @@ func NewPubSubService(rdb *redis.Client) *PubSubService {
 
 func (s *PubSubService) PublishAlert(ctx context.Context, alertType string, data map[string]interface{}) error {
 	msg := map[string]interface{}{
+		"type":      "alert", // Adding a type field for the frontend WebSocket parser
 		"alertType": alertType,
 		"data":      data,
 	}
 
-	_, err := s.rdb.Publish(ctx, s.alertChannel, msg).Result()
+	jsonBytes, err := json.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal alert: %w", err)
+	}
+
+	_, err = s.rdb.Publish(ctx, s.alertChannel, jsonBytes).Result()
 	if err != nil {
 		return fmt.Errorf("failed to publish alert: %w", err)
 	}

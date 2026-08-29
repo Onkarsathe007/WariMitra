@@ -16,10 +16,21 @@ function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon
   return R * c; 
 }
 
-export const NearestCampCard = () => {
+interface NearestCampCardProps {
+  activeLocation?: Service | null;
+  onClose?: () => void;
+}
+
+export const NearestCampCard = ({ activeLocation, onClose }: NearestCampCardProps = {}) => {
   const [nearestCamp, setNearestCamp] = useState<Service | null>(null);
   const [distance, setDistance] = useState<string>("Calculating...");
   const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    if (activeLocation) {
+      setVisible(true);
+    }
+  }, [activeLocation]);
 
   useEffect(() => {
     const loadNearestCamp = async () => {
@@ -84,50 +95,72 @@ export const NearestCampCard = () => {
     loadNearestCamp();
   }, []);
 
-  if (!visible || !nearestCamp) return null;
+  const displayCamp = activeLocation || nearestCamp;
+
+  if (!visible || !displayCamp) return null;
 
   return (
     <div className="nearest-camp-card glass-panel">
-      <button className="close-btn" aria-label="Close card" onClick={() => setVisible(false)}>
+      <button className="close-btn" aria-label="Close card" onClick={() => {
+        setVisible(false);
+        if (onClose) onClose();
+      }}>
         <X size={16} />
       </button>
       
       <div className="camp-header">
-        <h3 className="camp-title">{nearestCamp.name || 'Nearest Camp'}</h3>
+        <h3 className="camp-title">{displayCamp.name || (activeLocation ? 'Location Details' : 'Nearest Camp')}</h3>
         <div className="camp-meta">
-          <span>{distance} away</span>
+          <span>{activeLocation ? (displayCamp.city || 'Pandharpur') : distance + ' away'}</span>
           <span className="dot">•</span>
-          <span className={`status ${nearestCamp.available ? 'open' : 'closed'}`}>
-            {nearestCamp.available ? 'Open' : 'Closed'}
+          <span className={`status ${displayCamp.available ? 'open' : 'closed'}`}>
+            {displayCamp.available ? 'Open' : 'Closed'}
           </span>
         </div>
       </div>
 
       <div className="facilities-row">
-        <div className="facility-item">
-          <div className="facility-icon water">
-            <Droplets size={16} />
+        {activeLocation ? (
+          <div className="facility-item" style={{ flex: 1, padding: '8px', opacity: 0.8 }}>
+            <span style={{ fontSize: '13px', lineHeight: '1.4' }}>
+              {displayCamp.description || 'Details are available for this location.'}
+            </span>
           </div>
-          <span className="facility-label">Water</span>
-        </div>
-        <div className="facility-item">
-          <div className="facility-icon food">
-            <Utensils size={16} />
-          </div>
-          <span className="facility-label">Food</span>
-        </div>
-        <div className="facility-item">
-          <div className="facility-icon toilet">
-            <Baby size={16} />
-          </div>
-          <span className="facility-label">Toilets</span>
-        </div>
+        ) : (
+          <>
+            <div className="facility-item">
+              <div className="facility-icon water">
+                <Droplets size={16} />
+              </div>
+              <span className="facility-label">Water</span>
+            </div>
+            <div className="facility-item">
+              <div className="facility-icon food">
+                <Utensils size={16} />
+              </div>
+              <span className="facility-label">Food</span>
+            </div>
+            <div className="facility-item">
+              <div className="facility-icon toilet">
+                <Baby size={16} />
+              </div>
+              <span className="facility-label">Toilets</span>
+            </div>
+          </>
+        )}
       </div>
 
-      <button className="view-details-btn">
-        <span>View Details</span>
-        <ArrowRight size={18} strokeWidth={2.5} />
-      </button>
+      {activeLocation && displayCamp.contactPhone ? (
+        <a href={`tel:${displayCamp.contactPhone}`} className="view-details-btn" style={{ textDecoration: 'none', background: 'var(--color-green-open)', borderColor: 'var(--color-green-open)' }}>
+          <span style={{ color: 'white' }}>Call {displayCamp.contactPhone}</span>
+          <ArrowRight size={18} strokeWidth={2.5} color="white" />
+        </a>
+      ) : (
+        <button className="view-details-btn">
+          <span>View Details</span>
+          <ArrowRight size={18} strokeWidth={2.5} />
+        </button>
+      )}
     </div>
   );
 };

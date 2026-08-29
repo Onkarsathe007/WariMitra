@@ -30,8 +30,8 @@
   --text-primary: #1f2937;
   --text-secondary: #4b5563;
   --text-muted: #9ca3af;
-  --font-display: 'Cormorant Garamond', serif;
-  --font-body: 'Outfit', sans-serif;
+  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
   
   /* Liquid Glass Surfaces - Light */
   --glass-bg: rgba(255, 255, 255, 0.75);
@@ -141,10 +141,10 @@ body {
   background: var(--bg-map) !important;
 }
 
-.leaflet-layer,
-.leaflet-control-zoom-in,
-.leaflet-control-zoom-out,
-.leaflet-control-attribution {
+html.dark .leaflet-layer,
+html.dark .leaflet-control-zoom-in,
+html.dark .leaflet-control-zoom-out,
+html.dark .leaflet-control-attribution {
   filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
 }
 

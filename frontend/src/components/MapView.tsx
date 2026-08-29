@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { Phone, MapPin } from 'lucide-react';
 import { fetchServices, fetchCamps } from '../services/api';
 import { GeoWebSocket } from '../services/websocket';
 import type { Service, UserLocation } from '../types';
@@ -37,7 +38,7 @@ const iconMap = {
   other: createCustomIcon('var(--text-muted)', '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>', 'Service')
 };
 
-export const MapView = () => {
+export const MapView = ({ onMarkerClick }: { onMarkerClick?: (service: Service) => void }) => {
   const [services, setServices] = useState<Service[]>([]);
   const [liveUsers, setLiveUsers] = useState<Record<string, UserLocation>>({});
   const [userPos, setUserPos] = useState<[number, number]>([17.675, 75.321]);
@@ -125,11 +126,32 @@ export const MapView = () => {
           const lng = s.location.coordinates[0];
           
           return (
-            <Marker key={s._id} position={[lat, lng]} icon={getIconForType(s.type)}>
+            <Marker 
+              key={s._id} 
+              position={[lat, lng]} 
+              icon={getIconForType(s.type)}
+              eventHandlers={{ click: () => onMarkerClick && onMarkerClick(s) }}
+            >
               <Popup className="custom-popup">
                 <div className="p-2">
-                  <h3 className="font-bold mb-1" style={{ fontSize: '14px', margin: '0 0 4px 0' }}>{s.name}</h3>
-                  <p className="text-secondary" style={{ fontSize: '12px', margin: '0 0 8px 0' }}>{s.description || 'No description available.'}</p>
+                  {s.media && s.media.length > 0 && (
+                    <img src={s.media[0]} alt="Service" className="popup-img" />
+                  )}
+                  <h3 className="font-bold mb-1" style={{ fontSize: '14px', margin: '0 0 4px 0', color: s.type === 'medical' ? 'var(--color-red-medical)' : 'var(--color-orange-camp)' }}>{s.name}</h3>
+                  
+                  {s.city && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                      <MapPin size={12} /> {s.city}
+                    </div>
+                  )}
+
+                  <p className="text-secondary" style={{ fontSize: '12px', margin: '0 0 12px 0', lineHeight: '1.4' }}>{s.description || 'No description available.'}</p>
+                  
+                  {s.contactPhone && (
+                    <a href={`tel:${s.contactPhone}`} className="contact-btn" style={{ fontSize: '12px', padding: '6px' }}>
+                      <Phone size={14} /> {s.contactPhone}
+                    </a>
+                  )}
                 </div>
               </Popup>
             </Marker>

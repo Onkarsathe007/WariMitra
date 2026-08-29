@@ -132,6 +132,10 @@ func (h *Hub) GetActiveConnections() int {
 	return len(h.clients)
 }
 
+func (h *Hub) Broadcast(message []byte) {
+	h.broadcast <- message
+}
+
 func (c *Client) ReadPump() {
 	defer func() {
 		c.hub.UnregisterClient(c)

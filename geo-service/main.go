@@ -45,6 +45,10 @@ func main() {
 	pubsubSvc := service.NewPubSubService(rdb)
 	geoSvc := service.NewGeoService(locationSvc, pubsubSvc)
 
+	pubsubSvc.Subscribe(ctx, func(channel string, payload string) {
+		hub.Broadcast([]byte(payload))
+	})
+
 	locationHandler := handler.NewLocationHandler(locationSvc, hub)
 	geoHandler := handler.NewGeoHandler(geoSvc, hub)
 	healthHandler := handler.NewHealthHandler(hub)
