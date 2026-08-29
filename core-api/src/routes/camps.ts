@@ -59,7 +59,7 @@ router.get("/:id", async (req: Request, res: Response) => {
   res.json({ status: "ok", camp });
 });
 
-router.post("/", authenticate, authorize("helper", "admin"), validate(createCampSchema), async (req: Request, res: Response) => {
+router.post("/", authenticate, validate(createCampSchema), async (req: Request, res: Response) => {
   const camp = await Camp.create({ ...req.body, operator: req.user!.userId });
   if (camp.location && camp.location.coordinates) {
     await syncLocation(camp.id, camp.type || "camp", camp.location.coordinates[1], camp.location.coordinates[0]);

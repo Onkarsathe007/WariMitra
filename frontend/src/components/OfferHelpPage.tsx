@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { 
   Home, Cross, Droplets, Utensils, SquarePlay, Armchair, 
-  HandHeart, AlertTriangle, Check, MapPin, Phone, 
-  MessageCircle, Smartphone, ArrowRight, Handshake, AlertCircle 
+  HandHeart, AlertTriangle, Check, MapPin, 
+  ArrowRight, Handshake, AlertCircle 
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
@@ -52,10 +52,13 @@ export const OfferHelpPage = () => {
   const [location, setLocation] = useState<[number, number] | null>(null);
   const [description, setDescription] = useState('');
   const [availability, setAvailability] = useState('');
-  const [contactPreference, setContactPreference] = useState<'Call' | 'WhatsApp' | 'In-app' | ''>('');
+  const [city, setCity] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [media, setMedia] = useState<string[]>([]);
   
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const toggleService = (id: string) => {
     setSelectedServices(prev => 
@@ -64,15 +67,60 @@ export const OfferHelpPage = () => {
     setErrorMsg('');
   };
 
+  const fetchCityName = async (lat: number, lng: number) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      const data = await res.json();
+      const detectedCity = data.address?.city || data.address?.town || data.address?.village || data.address?.county || '';
+      if (detectedCity) {
+        setCity(detectedCity);
+      }
+    } catch (e) {
+      console.error("Failed to reverse geocode:", e);
+    }
+  };
+
+  const handleLocationUpdate = (lat: number, lng: number) => {
+    setLocation([lat, lng]);
+    fetchCityName(lat, lng);
+    setErrorMsg('');
+  };
+
   const handleGetCurrentLocation = () => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          setLocation([pos.coords.latitude, pos.coords.longitude]);
-          setErrorMsg('');
+          handleLocationUpdate(pos.coords.latitude, pos.coords.longitude);
         },
         () => setErrorMsg('Could not get your location. Please select manually on the map.')
       );
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    const formData = new FormData();
+    formData.append('media', file);
+
+    setIsUploading(true);
+    try {
+      const res = await fetch('http://localhost:3000/api/v1/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.url) {
+        setMedia(prev => [...prev, data.url]);
+      } else {
+        setErrorMsg('Failed to upload image');
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg('Error uploading image');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -85,6 +133,10 @@ export const OfferHelpPage = () => {
       setErrorMsg('Choose where Warkaris can find you.');
       return false;
     }
+    if (!city) {
+      setErrorMsg('Please select or enter the city.');
+      return false;
+    }
     setErrorMsg('');
     return true;
   };
@@ -95,17 +147,29 @@ export const OfferHelpPage = () => {
     }
   };
 
+  const mapServiceType = (frontendType: string) => {
+    switch (frontendType) {
+      case 'accommodation': return 'shelter';
+      case 'medical': return 'medical';
+      case 'water': return 'water';
+      case 'food': return 'food';
+      default: return 'other';
+    }
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     const payload = {
       name: 'Helper Service',
-      type: selectedServices[0],
+      type: mapServiceType(selectedServices[0]),
       location: {
         type: 'Point',
         coordinates: [location![1], location![0]]
       },
+      city: city,
       description: description,
-      contactPhone: contactPreference
+      contactPhone: contactPhone,
+      media: media
     };
 
     const res = await submitHelperService(payload);
@@ -172,7 +236,7 @@ export const OfferHelpPage = () => {
                   style={{ height: '100%', width: '100%', zIndex: 0 }}
                 >
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                  <MapClickHandler onLocationSelect={(lat, lng) => setLocation([lat, lng])} />
+                  <MapClickHandler onLocationSelect={handleLocationUpdate} />
                   {location && <Marker position={location} icon={dropPinIcon} />}
                 </MapContainer>
               </div>
@@ -185,6 +249,17 @@ export const OfferHelpPage = () => {
             <section className="glass-panel-solid glass-form-container">
               <h3 className="offer-section-title" style={{ marginBottom: 0 }}>Tell us a little more</h3>
               
+              <div className="form-group" style={{ marginTop: '16px' }}>
+                <label className="form-label">City Name</label>
+                <input 
+                  type="text" 
+                  className="glass-input" 
+                  placeholder="e.g. Pandharpur, Pune, Alandi..."
+                  value={city}
+                  onChange={e => setCity(e.target.value)}
+                />
+              </div>
+
               <div className="form-group">
                 <label className="form-label">What can you provide?</label>
                 <textarea 
@@ -221,27 +296,31 @@ export const OfferHelpPage = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">How can Warkaris contact you?</label>
-                <div className="contact-options">
-                  <div 
-                    className={`contact-pill ${contactPreference === 'Call' ? 'selected' : ''}`}
-                    onClick={() => setContactPreference('Call')}
-                  >
-                    <Phone size={16} /> Call
-                  </div>
-                  <div 
-                    className={`contact-pill ${contactPreference === 'WhatsApp' ? 'selected' : ''}`}
-                    onClick={() => setContactPreference('WhatsApp')}
-                  >
-                    <MessageCircle size={16} /> WhatsApp
-                  </div>
-                  <div 
-                    className={`contact-pill ${contactPreference === 'In-app' ? 'selected' : ''}`}
-                    onClick={() => setContactPreference('In-app')}
-                  >
-                    <Smartphone size={16} /> In-app
-                  </div>
+                <label className="form-label">Phone Number</label>
+                <input 
+                  type="tel" 
+                  className="glass-input" 
+                  placeholder="e.g. +91 9876543210"
+                  value={contactPhone}
+                  onChange={e => setContactPhone(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Add Photos (Optional)</label>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                  {media.map((url, i) => (
+                    <img key={i} src={url} alt="upload" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />
+                  ))}
+                  {isUploading && <div style={{ width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}>...</div>}
                 </div>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="glass-input" 
+                  onChange={handleImageUpload}
+                  disabled={isUploading}
+                />
               </div>
             </section>
 
@@ -271,6 +350,11 @@ export const OfferHelpPage = () => {
               <p className="text-primary">Coordinates: {location?.[0].toFixed(4)}, {location?.[1].toFixed(4)}</p>
             </div>
             
+            <div className="form-group">
+              <label className="form-label">City</label>
+              <p className="text-primary">{city}</p>
+            </div>
+            
             {description && (
               <div className="form-group">
                 <label className="form-label">Description</label>
@@ -280,8 +364,15 @@ export const OfferHelpPage = () => {
             
             <div className="form-group">
               <label className="form-label">Contact</label>
-              <p className="text-primary">{contactPreference || 'Not specified'}</p>
+              <p className="text-primary">{contactPhone || 'Not specified'}</p>
             </div>
+
+            {media.length > 0 && (
+              <div className="form-group">
+                <label className="form-label">Photos Attached</label>
+                <p className="text-primary">{media.length} photo(s)</p>
+              </div>
+            )}
 
             {errorMsg && (
               <div className="validation-message animate-fade-in">

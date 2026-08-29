@@ -61,7 +61,7 @@ router.get("/:id", async (req: Request, res: Response) => {
   res.json({ status: "ok", service });
 });
 
-router.post("/", authenticate, authorize("helper", "admin"), validate(createServiceSchema), async (req: Request, res: Response) => {
+router.post("/", authenticate, validate(createServiceSchema), async (req: Request, res: Response) => {
   const service = await Service.create({ ...req.body, operator: req.user!.userId });
   if (service.location && service.location.coordinates) {
     await syncLocation(service.id, "service", service.location.coordinates[1], service.location.coordinates[0]);

@@ -1,7 +1,10 @@
 package middleware
 
 import (
+	"bufio"
+	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"time"
 )
@@ -9,8 +12,14 @@ import (
 func Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		wrapped := &statusResponseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 
+		if len(r.URL.Path) >= 4 && r.URL.Path[:4] == "/ws/" {
+			next.ServeHTTP(w, r)
+			slog.Info("websocket request", "method", r.Method, "path", r.URL.Path, "duration", time.Since(start).String())
+			return
+		}
+
+		wrapped := &statusResponseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 		next.ServeHTTP(wrapped, r)
 
 		slog.Info("request",
@@ -60,4 +69,18 @@ type statusResponseWriter struct {
 func (w *statusResponseWriter) WriteHeader(code int) {
 	w.statusCode = code
 	w.ResponseWriter.WriteHeader(code)
+}
+
+func (w *statusResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hijacker, ok := w.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, fmt.Errorf("websocket: response does not implement http.Hijacker")
+	}
+	return hijacker.Hijack()
+}
+
+func (w *statusResponseWriter) Flush() {
+	if flusher, ok := w.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
+	}
 }
