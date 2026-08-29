@@ -92,6 +92,7 @@ export interface IService {
     coordinates: [number, number]; // [lng, lat]
   };
   contactPhone?: string;
+  city?: string;
   description?: string;
   available: boolean;
   media?: string[];
