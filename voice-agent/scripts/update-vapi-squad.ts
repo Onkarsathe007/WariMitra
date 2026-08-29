@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import "dotenv/config";
-const VAPI_KEY = process.env.VAPI_PRIVATE_KEY || "cf73b21f-baf6-42dd-b7f7-fe46c57291d1";
+const VAPI_KEY = "f3650da9-2910-42dc-80cd-cd432ffc6146";
 
 // Existing tools we want to attach to all agents
 const COMMON_TOOL_IDS = [

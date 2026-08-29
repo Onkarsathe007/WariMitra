@@ -26,6 +26,11 @@ const CampSchema = new Schema<CampDocument>(
         required: true,
       },
     },
+    city: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
     description: {
       type: String,
       trim: true,

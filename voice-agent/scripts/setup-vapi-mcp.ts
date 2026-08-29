@@ -1,7 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
-const VAPI_TOKEN = "cf73b21f-baf6-42dd-b7f7-fe46c57291d1";
+const VAPI_TOKEN = "f3650da9-2910-42dc-80cd-cd432ffc6146";
 const PHONE_NUMBER_ID = "54aaec54-6765-4d1b-9d19-bc62cbc7b386"; // +14348359762
 const NGROK_URL = process.argv[2] || "https://PLACEHOLDER_NGROK_URL.ngrok-free.app";
 

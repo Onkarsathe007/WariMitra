@@ -18,7 +18,7 @@ const ServiceSchema = new Schema<ServiceDocument>(
     location: {
       type: {
         type: String,
-        enum: ["Point"],
+        enum: ["Point"],  
         required: true,
       },
       coordinates: {

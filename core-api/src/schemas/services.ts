@@ -20,6 +20,7 @@ export const updateServiceSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   type: z.enum(["medical", "food", "water", "shelter", "other"]).optional(),
   location: pointSchema.optional(),
+  city: z.string().max(100).optional(),
   contactPhone: z.string().max(15).optional(),
   description: z.string().max(2000).optional(),
   available: z.boolean().optional(),

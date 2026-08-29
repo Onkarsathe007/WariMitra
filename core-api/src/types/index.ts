@@ -71,6 +71,7 @@ export interface ICamp {
     coordinates: [number, number]; // [lng, lat]
   };
   description?: string;
+  city?: string;
   contactPhone?: string;
   operatingHours?: string;
   services: string[];
@@ -92,6 +93,7 @@ export interface IService {
     coordinates: [number, number]; // [lng, lat]
   };
   contactPhone?: string;
+  city?: string;
   description?: string;
   available: boolean;
   media?: string[];

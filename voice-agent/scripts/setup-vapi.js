@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const VAPI_PRIVATE_KEY = "cf73b21f-baf6-42dd-b7f7-fe46c57291d1";
+const VAPI_PRIVATE_KEY = "f3650da9-2910-42dc-80cd-cd432ffc6146";
 const PHONE_NUMBER_ID = "54aaec54-6765-4d1b-9d19-bc62cbc7b386"; // +14348359762
 
 const vapiApi = axios.create({
