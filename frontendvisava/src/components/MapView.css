@@ -1,0 +1,135 @@
+.map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* Map Dark Mode Styling */
+html.dark .leaflet-layer,
+html.dark .leaflet-control-zoom-in,
+html.dark .leaflet-control-zoom-out,
+html.dark .leaflet-control-attribution {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
+.leaflet-control-attribution {
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  font-size: 10px !important;
+}
+
+/* Custom Marker CSS matching the reference */
+.custom-leaflet-marker {
+  background: transparent;
+  border: none;
+}
+
+.marker-container {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  top: -12px;
+  left: -20px; /* Offset to center the pin correctly */
+}
+
+.marker-pin {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+  border: 2px solid white;
+}
+
+html.dark .marker-pin {
+  border-color: #1e1e1e;
+}
+
+.marker-pin-tail {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; 
+  height: 0; 
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid; /* color set inline */
+  z-index: -1;
+}
+
+.marker-label-pill {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px 0 20px;
+  margin-left: -14px; /* overlap slightly under the pin */
+  border-radius: 0 14px 14px 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--glass-bg-solid);
+  z-index: 1;
+}
+
+/* User Marker */
+.user-marker-container {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  top: -20px;
+  left: -20px;
+}
+
+.user-dot {
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-blue-water);
+  border-radius: 50%;
+  border: 3px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+html.dark .user-dot {
+  border-color: #1e1e1e;
+}
+
+.user-dot-pulse {
+  position: absolute;
+  top: 50%;
+  left: 12px; /* 24/2 */
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  background-color: var(--color-blue-water);
+  border-radius: 50%;
+  opacity: 0.2;
+  animation: pulse-ring 2s infinite ease-out;
+  z-index: 0;
+}
+
+.user-label-pill {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px 0 16px;
+  margin-left: -10px;
+  border-radius: 0 14px 14px 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--glass-bg-solid);
+  z-index: 1;
+}
