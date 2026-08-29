@@ -20,7 +20,7 @@ const toolsConfig = [
         required: ["type", "location_text"]
       }
     },
-    server: { url: "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools" }
+    server: { url: "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools" }
   },
   {
     type: "function",
@@ -39,7 +39,7 @@ const toolsConfig = [
         required: ["name", "age", "description", "last_seen_location"]
       }
     },
-    server: { url: "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools" }
+    server: { url: "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools" }
   },
   {
     type: "function",
@@ -56,7 +56,7 @@ const toolsConfig = [
         required: ["description", "location_text"]
       }
     },
-    server: { url: "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools" }
+    server: { url: "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools" }
   },
   {
     type: "function",
@@ -74,7 +74,7 @@ const toolsConfig = [
         required: ["item_name", "description", "location_text"]
       }
     },
-    server: { url: "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools" }
+    server: { url: "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools" }
   },
   {
     type: "function",
@@ -90,7 +90,7 @@ const toolsConfig = [
         required: ["report_id"]
       }
     },
-    server: { url: "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools" }
+    server: { url: "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools" }
   },
   {
     type: "function",
@@ -104,7 +104,7 @@ const toolsConfig = [
         required: []
       }
     },
-    server: { url: "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools" }
+    server: { url: "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools" }
   }
 ];
 

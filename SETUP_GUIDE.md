@@ -55,9 +55,9 @@ Because Vapi is a cloud service, it needs a public URL to talk to your local Voi
 In a new terminal, run your Ngrok static domain command:
 
 ```bash
-ngrok http --url=alfalfa-copartner-yearning.ngrok-free.dev 4000
+ngrok http --url=entire-smartly-municipal.ngrok-free.dev 4000
 ```
-*Your webhook URL for Vapi will now be: `https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools`*
+*Your webhook URL for Vapi will now be: `https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools`*
 
 ## 6. Vapi Assistant Configuration
 Instead of manually typing out the tools in the Vapi GUI (which can be error-prone), use the provided JSON configuration.
