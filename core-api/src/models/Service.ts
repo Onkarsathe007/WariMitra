@@ -30,6 +30,11 @@ const ServiceSchema = new Schema<ServiceDocument>(
       type: String,
       trim: true,
     },
+    city: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
     description: {
       type: String,
       trim: true,

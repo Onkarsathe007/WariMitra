@@ -11,7 +11,7 @@ By following this guide, you will create a production-ready Squad consisting of 
 1. A new **Vapi Account** (Dashboard access).
 2. A **Twilio Phone Number** (or Vapi-provided number) imported into the Vapi Dashboard.
 3. Your **ngrok** tunneling URL (or production server URL). 
-   - *Current Server URL:* `https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools`
+   - *Current Server URL:* `https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools`
    - *Note: If you restart ngrok, you must update the URLs in Step 1.*
 
 ---
@@ -41,7 +41,7 @@ Create the following 4 tools exactly as shown. Choose **Function** as the tool t
     }
   },
   "server": {
-    "url": "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools"
+    "url": "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools"
   }
 }
 ```
@@ -64,7 +64,7 @@ Create the following 4 tools exactly as shown. Choose **Function** as the tool t
     }
   },
   "server": {
-    "url": "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools"
+    "url": "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools"
   }
 }
 ```
@@ -87,7 +87,7 @@ Create the following 4 tools exactly as shown. Choose **Function** as the tool t
     }
   },
   "server": {
-    "url": "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools"
+    "url": "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools"
   }
 }
 ```
@@ -110,7 +110,7 @@ Create the following 4 tools exactly as shown. Choose **Function** as the tool t
     }
   },
   "server": {
-    "url": "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools"
+    "url": "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools"
   }
 }
 ```
@@ -137,7 +137,7 @@ Create the following 4 tools exactly as shown. Choose **Function** as the tool t
     }
   },
   "server": {
-    "url": "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools"
+    "url": "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools"
   }
 }
 ```
@@ -173,7 +173,7 @@ Create the following 4 tools exactly as shown. Choose **Function** as the tool t
     }
   },
   "server": {
-    "url": "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools"
+    "url": "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools"
   }
 }
 ```
@@ -201,7 +201,7 @@ Create the following 4 tools exactly as shown. Choose **Function** as the tool t
     }
   },
   "server": {
-    "url": "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools"
+    "url": "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools"
   }
 }
 ```
@@ -233,7 +233,7 @@ Create the following 4 tools exactly as shown. Choose **Function** as the tool t
     }
   },
   "server": {
-    "url": "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools"
+    "url": "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools"
   }
 }
 ```
@@ -257,7 +257,7 @@ Create the following 4 tools exactly as shown. Choose **Function** as the tool t
     }
   },
   "server": {
-    "url": "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools"
+    "url": "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools"
   }
 }
 ```
@@ -275,7 +275,7 @@ Create the following 4 tools exactly as shown. Choose **Function** as the tool t
     }
   },
   "server": {
-    "url": "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools"
+    "url": "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools"
   }
 }
 ```
@@ -484,7 +484,7 @@ Since Vapi needs a public HTTPS URL to reach your local server, run ngrok on the
 ```bash
 ngrok http 4000
 ```
-Copy the Forwarding URL (e.g., `https://entire-smartly-municipal.ngrok-free.dev`) and ensure it matches the `server.url` property in all your Vapi Function Tools (Step 1).
+Copy the Forwarding URL (e.g., `https://alfalfa-copartner-yearning.ngrok-free.dev`) and ensure it matches the `server.url` property in all your Vapi Function Tools (Step 1).
 
 ### 5. (Optional) Setup MCP Server for AI Debugging
 If you are using an AI agent (like Claude or Antigravity) to manage your Vapi environment locally via MCP, you must pass the Vapi keys to the MCP server configuration.

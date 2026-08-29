@@ -8,7 +8,7 @@ async function run() {
 
   for (const t of tools) {
     if (t.type === "function" && t.server) {
-      const correctUrl = "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools";
+      const correctUrl = "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools";
       if (t.server.url !== correctUrl) {
         console.log(`Updating tool ${t.function.name} to correct URL`);
         await axios.patch(`https://api.vapi.ai/tool/${t.id}`, {

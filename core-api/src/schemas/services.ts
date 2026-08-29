@@ -10,6 +10,7 @@ export const createServiceSchema = z.object({
   type: z.enum(["medical", "food", "water", "shelter", "other"]),
   location: pointSchema,
   contactPhone: z.string().max(15).optional(),
+  city: z.string().max(100).optional(),
   description: z.string().max(2000).optional(),
   available: z.boolean().default(true),
   media: z.array(z.string()).max(10).optional(),

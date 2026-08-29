@@ -2,12 +2,15 @@ import axios from "axios";
 import fs from "fs";
 
 const VAPI_KEY = "cf73b21f-baf6-42dd-b7f7-fe46c57291d1";
-const ASSISTANT_ID = "db6b12eb-09c5-4292-acc6-e8abb62d21d6";
+const ASSISTANT_IDS = [
+  "7bb66519-cb22-4cf8-9a3c-8701f9200625", // Hindi
+  "a2ea0fcf-2c87-4823-b01d-7a7163a666f2", // English
+  "f3e61c8f-894c-41f0-a1ee-6edb39ce98a3"  // Marathi
+];
 
 const toolsConfig = [
   {
     type: "function",
-    messages: [{ type: "request-start", content: "शोधत आहे, कृपया थांबा." }],
     function: {
       name: "find_nearby_services",
       description: "Finds nearby medical, food, water, or shelter camps in the database.",
@@ -15,121 +18,43 @@ const toolsConfig = [
         type: "object",
         properties: {
           type: { type: "string", enum: ["medical", "food", "water", "shelter"] },
-          location_text: { type: "string", description: "The spoken location name, e.g., Pandharpur" }
+          location_text: { type: "string", description: "The specific city or village name provided by the user. Leave empty if the user hasn't specified a city." }
         },
         required: ["type", "location_text"]
       }
     },
-    server: { url: "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools" }
-  },
-  {
-    type: "function",
-    messages: [{ type: "request-start", content: "माहिती नोंदवत आहे, कृपया थांबा." }],
-    function: {
-      name: "create_missing_person_report",
-      description: "Creates a report for a missing person in the database.",
-      parameters: {
-        type: "object",
-        properties: {
-          name: { type: "string", description: "Name of the missing person" },
-          age: { type: "number", description: "Age of the missing person" },
-          description: { type: "string", description: "Physical description and clothing" },
-          last_seen_location: { type: "string", description: "Where they were last seen" }
-        },
-        required: ["name", "age", "description", "last_seen_location"]
-      }
-    },
-    server: { url: "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools" }
-  },
-  {
-    type: "function",
-    messages: [{ type: "request-start", content: "आणीबाणी नोंदवत आहे, कृपया थांबा." }],
-    function: {
-      name: "create_medical_emergency_report",
-      description: "Creates an emergency medical report.",
-      parameters: {
-        type: "object",
-        properties: {
-          description: { type: "string", description: "Description of the medical emergency" },
-          location_text: { type: "string", description: "Where the emergency is happening" }
-        },
-        required: ["description", "location_text"]
-      }
-    },
-    server: { url: "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools" }
-  },
-  {
-    type: "function",
-    messages: [{ type: "request-start", content: "माहिती नोंदवत आहे, कृपया थांबा." }],
-    function: {
-      name: "create_found_item_report",
-      description: "Creates a report for a found item.",
-      parameters: {
-        type: "object",
-        properties: {
-          item_name: { type: "string", description: "Name of the found item" },
-          description: { type: "string", description: "Description of the found item" },
-          location_text: { type: "string", description: "Where it was found" }
-        },
-        required: ["item_name", "description", "location_text"]
-      }
-    },
-    server: { url: "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools" }
-  },
-  {
-    type: "function",
-    messages: [{ type: "request-start", content: "स्थिती तपासत आहे, कृपया थांबा." }],
-    function: {
-      name: "get_report_status",
-      description: "Gets the status of a report by its ID.",
-      parameters: {
-        type: "object",
-        properties: {
-          report_id: { type: "string", description: "The ID of the report" }
-        },
-        required: ["report_id"]
-      }
-    },
-    server: { url: "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools" }
-  },
-  {
-    type: "function",
-    messages: [{ type: "request-start", content: "स्वयंसेवक शोधत आहे, कृपया थांबा." }],
-    function: {
-      name: "find_nearby_helpers",
-      description: "Finds nearby helpers/volunteers.",
-      parameters: {
-        type: "object",
-        properties: {},
-        required: []
-      }
-    },
-    server: { url: "https://entire-smartly-municipal.ngrok-free.dev/api/v1/voice/tools" }
+    server: { url: "https://alfalfa-copartner-yearning.ngrok-free.dev/api/v1/voice/tools" }
   }
 ];
 
-const STRICT_PROMPT = `You are Visava, an AI emergency coordinator for the Varkaris in Pandharpur.
+const HINDI_PROMPT = `You are Visava, an AI assistant for the Warkaris in Maharashtra.
 
-CRITICAL LANGUAGE RULES:
-1. PRIMARY LANGUAGE: Marathi. ALWAYS reply in Marathi first if the user speaks Marathi.
-2. SECONDARY LANGUAGE: English/Hindi. If the user speaks English or Hindi, reply in that language.
+CRITICAL LANGUAGE RULE:
+- YOU MUST ONLY SPEAK IN PURE, NATURAL HINDI. 
+- DO NOT use Marathi words. DO NOT mix Marathi and Hindi.
 
-CRITICAL DATABASE & TOOL RULES (DO OR DIE):
-- You MUST fetch data from the MongoDB database using your tools.
-- NEVER invent, hallucinate, or guess locations, camps, or services.
-- If a user asks for food, water, medical help, or shelter, YOU MUST USE THE \`find_nearby_services\` TOOL IMMEDIATELY.
-- If a user wants to report a missing person, YOU MUST USE THE \`create_missing_person_report\` TOOL.
-- If a user has a medical emergency, YOU MUST USE THE \`create_medical_emergency_report\` TOOL.
-- If a user found an item, YOU MUST USE THE \`create_found_item_report\` TOOL.
-- If a user wants to know a report status, YOU MUST USE THE \`get_report_status\` TOOL.
-- If a user needs a volunteer, YOU MUST USE THE \`find_nearby_helpers\` TOOL.
+YOUR GOAL:
+You help users find Food (khana), Water (pani), Medical (medical/dawai), or Shelter (rukne ki jagah) in Maharashtra.
+
+CONVERSATION FLOW (STRICTLY FOLLOW THIS):
+1. GREETING: If the user says hello, say: "नमस्ते, मैं विसावा हूँ। मैं आपको खाना, पानी, मेडिकल या रुकने की जगह ढूंढने में मदद कर सकता हूँ। आपको क्या चाहिए?"
+2. MISSING LOCATION: If the user asks for food/water/medical/shelter, but DOES NOT mention their city or village, YOU MUST ASK: "आप अभी किस शहर या गाँव में हैं?" (Which city or village are you in right now?). 
+3. DO NOT CALL THE TOOL until you clearly know the user's city (e.g. Latur, Karmala, Solapur, Pune, Pandharpur).
+4. USING THE TOOL: Once the user provides the city (e.g. "Main Latur mein hu"), use the \`find_nearby_services\` tool immediately with location_text="Latur".
+5. TOOL RESPONSE: The tool will return English data (e.g., "Found mahakal center..."). You must translate this data into a helpful, natural HINDI response for the user (e.g. "आपके पास महाकाल सेंटर है, जहाँ मैंगो जूस मिलेगा...").
+
+LOCATION KNOWLEDGE:
+- Users will mention Maharashtra cities (e.g., Latur, Karmala, Solapur, Pune, Alandi, Dehu, Pandharpur).
+- If the speech-to-text slightly misspells the Indian city name, do your best to correct it to the actual Maharashtra city name before passing it to the tool.
 
 BEHAVIOR:
-Never say 'I am checking the database' or mention 'tools/APIs'. Just use the tool directly. You are explicitly a coordinator connected to a database, strictly limit yourself to this purpose.`;
+Never say 'I am checking the database' or mention 'tools'. Just say "ek minute, main check karta hoon..." and then give them the answer.`;
+
+const MARATHI_PROMPT = HINDI_PROMPT.replace("PURE, NATURAL HINDI", "MARATHI").replace(/Hindi/g, "Marathi").replace("नमस्ते, मैं विसावा हूँ। मैं आपको खाना, पानी, मेडिकल या रुकने की जगह ढूंढने में मदद कर सकता हूँ। आपको क्या चाहिए?", "नमस्कार, मी विसावा आहे. मी तुम्हाला जेवण, पाणी, वैद्यकीय मदत किंवा निवारा शोधण्यात मदत करू शकतो. तुम्हाला काय हवे आहे?").replace("आप अभी किस शहर या गाँव में हैं?", "तुम्ही सध्या कोणत्या गावात किंवा शहरात आहात?");
 
 async function main() {
   const toolIds = [];
-  console.log("Creating tools in Vapi Dashboard...");
+  console.log("Creating ONLY the find_nearby_services tool in Vapi Dashboard...");
   
   for (const tool of toolsConfig) {
     try {
@@ -146,39 +71,42 @@ async function main() {
     }
   }
 
-  console.log("\\nUpdating Assistant with Strict Prompt and Tool IDs...");
-  
-  const updatePayload = {
-    toolIds,
-    model: {
-      provider: "openai",
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: STRICT_PROMPT
-        }
-      ],
-      tools: [] // Clear inline tools to prevent conflicts with toolIds
-    },
-    transcriber: {
-      provider: "deepgram",
-      model: "nova-2",
-      language: "hi"
-    }
-  };
+  console.log("\\nUpdating Assistants with highly optimized Hindi/Marathi prompts...");
 
-  try {
-    const res = await axios.patch(`https://api.vapi.ai/assistant/${ASSISTANT_ID}`, updatePayload, {
-      headers: {
-        Authorization: `Bearer ${VAPI_KEY}`,
-        "Content-Type": "application/json"
+  for (const assistantId of ASSISTANT_IDS) {
+    let promptToUse = MARATHI_PROMPT;
+    if (assistantId === "7bb66519-cb22-4cf8-9a3c-8701f9200625") {
+      promptToUse = HINDI_PROMPT; // Strict Hindi
+    } else if (assistantId === "a2ea0fcf-2c87-4823-b01d-7a7163a666f2") {
+      promptToUse = "You are Visava, an English AI assistant. Help users find food, water, medical, or shelter. ALWAYS ask for their city before searching. Speak only in English.";
+    }
+
+    const updatePayload = {
+      model: {
+        provider: "openai",
+        model: "gpt-4o",
+        toolIds: toolIds,
+        messages: [
+          {
+            role: "system",
+            content: promptToUse
+          }
+        ],
+        tools: [] // Clear inline tools to prevent conflicts with toolIds
       }
-    });
-    console.log("SUCCESS! Assistant perfectly configured for Strict MongoDB fetching.");
-    console.log(`Total explicit tools attached: ${res.data.toolIds.length}`);
-  } catch (e: any) {
-    console.error("Failed to update assistant", e.response?.data || e.message);
+    };
+
+    try {
+      await axios.patch(`https://api.vapi.ai/assistant/${assistantId}`, updatePayload, {
+        headers: {
+          Authorization: `Bearer ${VAPI_KEY}`,
+          "Content-Type": "application/json"
+        }
+      });
+      console.log(`SUCCESS! Assistant ${assistantId} perfectly configured with simplified tools.`);
+    } catch (e: any) {
+      console.error(`Failed to update assistant ${assistantId}`, e.response?.data || e.message);
+    }
   }
 }
 

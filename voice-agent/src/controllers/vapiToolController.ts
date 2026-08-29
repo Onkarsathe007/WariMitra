@@ -15,6 +15,10 @@ export const handleVapiTools = async (req: Request, res: Response): Promise<void
       return;
     }
 
+    const assistantId = message.call?.assistantId;
+    const isHindi = assistantId === "7bb66519-cb22-4cf8-9a3c-8701f9200625";
+    const isEnglish = assistantId === "a2ea0fcf-2c87-4823-b01d-7a7163a666f2";
+
     const toolWithToolCallList = message.toolWithToolCallList || [];
     const results = [];
 
@@ -23,62 +27,67 @@ export const handleVapiTools = async (req: Request, res: Response): Promise<void
       if (toolCall.type === "function") {
         const { name, arguments: argsString } = toolCall.function;
         let resultContent = "";
-        const args = typeof argsString === 'string' ? JSON.parse(argsString || '{}') : (argsString || {});
 
         try {
+          const args = typeof argsString === 'string' ? JSON.parse(argsString || '{}') : (argsString || {});
           switch (name) {
-
+            case "find_nearby_services":
             case "find_nearby_food":
             case "find_nearby_accommodation":
             case "find_nearby_medical":
             case "find_nearby_water":
             case "find_nearby_camps": {
-              const { location_text } = args;
+              const { location_text, type } = args;
               let serviceType = "food";
-              if (name === "find_nearby_accommodation") serviceType = "shelter";
-              if (name === "find_nearby_medical") serviceType = "medical";
-              if (name === "find_nearby_water") serviceType = "water";
+              if (name === "find_nearby_accommodation" || type === "shelter") serviceType = "shelter";
+              if (name === "find_nearby_medical" || type === "medical") serviceType = "medical";
+              if (name === "find_nearby_water" || type === "water") serviceType = "water";
               // fallback for camps
-              if (name === "find_nearby_camps") serviceType = args.type || "medical";
+              if (name === "find_nearby_camps") serviceType = type || "medical";
+
+              if (!location_text || location_text.trim() === "") {
+                resultContent = `Error: Location is missing. Ask the user which village or city they are in.`;
+                break;
+              }
 
               const coords = await resolveLocation(location_text);
               
               if (!coords) {
-                resultContent = `माफ करा, '${location_text}' हे ठिकाण मला सापडले नाही. कृपया दुसरे ठिकाण सांगा.`;
+                resultContent = `Error: Could not find the location '${location_text}'. Ask the user to clarify the city or village name.`;
                 break;
               }
 
               let items = [];
               if (name === "find_nearby_camps") {
-                items = await findNearbyCamps(serviceType, coords.lat, coords.lng);
+                items = await findNearbyCamps(serviceType, coords.lat, coords.lng, 50);
               } else {
-                items = await findNearbyServices(serviceType, coords.lat, coords.lng);
+                items = await findNearbyServices(serviceType, coords.lat, coords.lng, 50);
               }
 
               if (items.length > 0) {
                 const topItem = items[0];
-                resultContent = `तुमच्या जवळ ${topItem.name} आहे.`;
+                resultContent = `Found ${topItem.name} nearby.`;
                 
                 if (topItem.description) {
-                  resultContent += ` ${topItem.description}`;
+                  resultContent += ` Description: ${topItem.description}.`;
                 }
 
                 if (topItem.contactPhone) {
-                  resultContent += ` त्यांचा संपर्क क्रमांक ${topItem.contactPhone.split("").join(" ")} आहे.`;
+                  resultContent += ` Contact number is ${topItem.contactPhone.split("").join(" ")}.`;
                 }
 
                 // Add Routing directions
-                if (topItem.location && topItem.location.lat && topItem.location.lng) {
-                  const destLng = topItem.location.lng;
-                  const destLat = topItem.location.lat;
+                if (topItem.location && topItem.location.coordinates) {
+                  const destLng = topItem.location.coordinates[0];
+                  const destLat = topItem.location.coordinates[1];
                   const directions = await getWalkingDirections(coords.lat, coords.lng, destLat, destLng);
                   
                   if (directions.length > 0) {
-                    resultContent += ` येथे जाण्यासाठी मार्ग: ${directions.join(" ")}`;
+                    resultContent += ` Walking directions: ${directions.join(" ")}`;
                   }
                 }
               } else {
-                resultContent = `सध्या तुमच्या जवळ कोणतीही ${serviceType === 'medical' ? 'वैद्यकीय' : serviceType} सुविधा सापडली नाही.`;
+                resultContent = `No ${serviceType} services found nearby.`;
               }
               break;
             }
@@ -100,9 +109,9 @@ export const handleVapiTools = async (req: Request, res: Response): Promise<void
               });
 
               if (report) {
-                resultContent = `तुमची माहिती नोंदवली गेली आहे. तुमचा रिपोर्ट आयडी ${report.id.substring(0, 4)} आहे. आम्ही लवकरच मदत पाठवू.`;
+                resultContent = `Report successfully created. Report ID is ${report._id.toString().substring(0, 4)}. Help will be dispatched soon.`;
               } else {
-                resultContent = `माफ करा, रिपोर्ट बनवताना अडचण आली. कृपया पुन्हा प्रयत्न करा.`;
+                resultContent = `Error: Failed to create report. Please try again.`;
               }
               break;
             }
@@ -124,9 +133,9 @@ export const handleVapiTools = async (req: Request, res: Response): Promise<void
               });
 
               if (report) {
-                resultContent = `वैद्यकीय आणीबाणी नोंदवली गेली आहे. कृपया शांत रहा, मदत पोहोचत आहे.`;
+                resultContent = `Medical emergency reported successfully. Please stay calm, help is on the way.`;
               } else {
-                resultContent = `माफ करा, आपत्कालीन रिपोर्ट पाठवण्यात अडचण आली.`;
+                resultContent = `Error: Failed to send emergency report.`;
               }
               break;
             }
@@ -148,9 +157,9 @@ export const handleVapiTools = async (req: Request, res: Response): Promise<void
               });
 
               if (report) {
-                resultContent = `धन्यवाद, तुमची माहिती नोंदवली गेली आहे. तुमचा रिपोर्ट आयडी ${report.id.substring(0, 4)} आहे.`;
+                resultContent = `Found item report created. Report ID is ${report._id.toString().substring(0, 4)}.`;
               } else {
-                resultContent = `माफ करा, माहिती नोंदवताना अडचण आली.`;
+                resultContent = `Error: Failed to create report.`;
               }
               break;
             }
@@ -159,9 +168,9 @@ export const handleVapiTools = async (req: Request, res: Response): Promise<void
               const { report_id } = args;
               const report = await getReport(report_id);
               if (report) {
-                resultContent = `तुमच्या रिपोर्टची सद्यस्थिती '${report.status}' आहे.`;
+                resultContent = `The current status of your report is '${report.status}'.`;
               } else {
-                resultContent = `माफ करा, ${report_id} या क्रमांकाचा कोणताही रिपोर्ट सापडला नाही.`;
+                resultContent = `Error: Could not find any report with ID ${report_id}.`;
               }
               break;
             }
@@ -170,9 +179,9 @@ export const handleVapiTools = async (req: Request, res: Response): Promise<void
               const helpers = await findHelpers();
               if (helpers && helpers.length > 0) {
                 const helper = helpers[0];
-                resultContent = `आम्हाला एक स्वयंसेवक सापडला आहे. त्यांचे नाव ${helper.name || 'स्वयंसेवक'} आहे. मी कॉल ट्रान्सफर करत आहे.`;
+                resultContent = `Found a volunteer named ${helper.name || 'Volunteer'}. Transferring call now.`;
               } else {
-                resultContent = `माफ करा, सध्या कोणताही स्वयंसेवक उपलब्ध नाही.`;
+                resultContent = `Sorry, no volunteers are currently available.`;
               }
               break;
             }
@@ -183,7 +192,7 @@ export const handleVapiTools = async (req: Request, res: Response): Promise<void
           }
         } catch (toolError) {
           logger.error({ err: toolError, name, args }, "Error executing Vapi tool");
-          resultContent = "माफ करा, तांत्रिक अडचण आली आहे.";
+          resultContent = "Error: A technical error occurred while processing the request.";
         }
 
         results.push({

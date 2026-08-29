@@ -11,16 +11,40 @@ export default function HelperDashboard() {
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
   const [phone, setPhone] = useState('');
+  const [city, setCity] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [geoLoading, setGeoLoading] = useState(false);
+
+  const handleLocationSelected = async (lat: number, lng: number) => {
+    setLocation({ lat, lng });
+    setGeoLoading(true);
+    try {
+      const res = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      if (res.data && res.data.address) {
+        const foundCity = res.data.address.city || res.data.address.town || res.data.address.village || res.data.address.county || '';
+        if (foundCity) {
+          setCity(foundCity);
+        }
+      }
+    } catch (e) {
+      console.error("Reverse geocoding failed", e);
+    } finally {
+      setGeoLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!location) {
       alert("Please select a location on the map.");
+      return;
+    }
+    if (!city.trim()) {
+      alert("Please ensure the city is identified, or type it in manually.");
       return;
     }
 
@@ -41,6 +65,7 @@ export default function HelperDashboard() {
       }
 
       const media = finalImageUrl ? [finalImageUrl] : [];
+      const locationData = { type: 'Point', coordinates: [location.lng, location.lat] };
 
       if (type === 'camp') {
         await axios.post(`${CORE_API_URL}/camps`, {
@@ -48,8 +73,9 @@ export default function HelperDashboard() {
           type: 'shelter',
           description: desc,
           contactPhone: phone || '+910000000000',
+          city: city.trim().toLowerCase(),
           media,
-          location: { type: 'Point', coordinates: [location.lng, location.lat] },
+          location: locationData,
           verified: true
         }, { headers });
       } else if (type === 'service') {
@@ -58,28 +84,31 @@ export default function HelperDashboard() {
           type: 'food',
           description: desc,
           contactPhone: phone || '+910000000000',
+          city: city.trim().toLowerCase(),
           media,
-          location: { type: 'Point', coordinates: [location.lng, location.lat] },
+          location: locationData,
           available: true
         }, { headers });
       } else if (type === 'report') {
         const res = await axios.post(`${CORE_API_URL}/reports`, {
           type: 'medical_emergency',
           description: desc || name,
-          location: { type: 'Point', coordinates: [location.lng, location.lat] },
+          city: city.trim().toLowerCase(),
+          location: locationData,
           reporterPhone: phone || '+910000000000',
           media
         }, { headers });
         await axios.patch(`${CORE_API_URL}/reports/${res.data.report._id}/confirm`, {}, { headers });
       }
 
-      setSuccessMsg("Successfully added! You can view it on the Warkari Explorer map.");
+      setSuccessMsg("Successfully added! The AI Agent can now find it easily.");
       // Reset form
       setName('');
       setDesc('');
       setPhone('');
-      setImageFile(null);
+      setCity('');
       setLocation(null);
+      setImageFile(null);
     } catch (error: any) {
       console.error(error);
       alert('Failed to add location: ' + (error.response?.data?.error || error.message));
@@ -145,11 +174,11 @@ export default function HelperDashboard() {
           <div className="form-column">
             <h3>2. Location</h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-              Tap the map to set the exact location for this resource.
+              Tap the map to set the exact location for this resource. We will automatically detect the city.
             </p>
             
             <LocationPickerMap 
-              onLocationSelected={(lat, lng) => setLocation({lat, lng})} 
+              onLocationSelected={handleLocationSelected} 
               defaultLocation={location || undefined}
             />
 
@@ -159,6 +188,20 @@ export default function HelperDashboard() {
               </p>
             )}
 
+            <div className="form-group" style={{ marginTop: '20px' }}>
+              <label>Detected City / Town</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input 
+                  required 
+                  placeholder="Tap the map above to detect city..." 
+                  value={city} 
+                  onChange={e => setCity(e.target.value)} 
+                  style={{ fontSize: '1.2rem', padding: '12px', flex: 1 }}
+                />
+                {geoLoading && <Loader2 className="lucide-spin" size={24} color="#f97316" />}
+              </div>
+            </div>
+            
             <button type="submit" className="btn-primary" style={{ marginTop: 'auto', padding: '16px', fontSize: '1.1rem' }} disabled={loading}>
               {loading ? <><Loader2 className="lucide-spin" size={20} /> Saving Data...</> : 'Submit Resource'}
             </button>
