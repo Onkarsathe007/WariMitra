@@ -11,6 +11,7 @@ import { NearestCampCard } from './components/NearestCampCard';
 import { BottomNavigation } from './components/BottomNavigation';
 import { ProfilePage } from './components/ProfilePage';
 import { OfferHelpPage } from './components/OfferHelpPage';
+import { HelperDashboard } from './components/helper-dashboard/HelperDashboard';
 import { NotificationProvider } from './context/NotificationContext';
 import type { TabType } from './types';
 
@@ -117,6 +118,10 @@ function App() {
 
   if (page === 'profile-complete' && user && token) {
     return <ProfileCompletion user={user} token={token} onComplete={handleProfileComplete} />;
+  }
+
+  if (user?.role === 'helper') {
+    return <HelperDashboard user={user} onLogout={handleLogout} />;
   }
 
   return (

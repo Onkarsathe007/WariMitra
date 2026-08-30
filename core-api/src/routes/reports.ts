@@ -48,7 +48,7 @@ router.post("/", authenticate, validate(createReportSchema), async (req: Request
 
   const report = await Report.create({
     ...req.body,
-    reporterPhone: req.user!.phoneNumber,
+    reporterPhone: req.user!.phoneNumber || req.body.reporterPhone || "unknown",
     confirmationCode,
     status: "pending",
   });
@@ -67,7 +67,7 @@ router.patch("/:id/confirm", authenticate, async (req: Request, res: Response) =
   const report = await Report.findById(req.params.id);
   if (!report) throw new NotFoundError("Report not found");
 
-  if (report.reporterPhone !== req.user!.phoneNumber) {
+  if (req.user!.role !== "admin" && report.reporterPhone !== req.user!.phoneNumber && report.reporterPhone !== "unknown") {
     throw new BadRequestError("Only the reporter can confirm this report");
   }
 

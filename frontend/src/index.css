@@ -7,6 +7,11 @@
   --visava-orange-light: #ff9d40;
   --visava-orange-dark: #cc6200;
 
+  /* Helper Portal Brand */
+  --color-saffron: #F28C28;
+  --color-saffron-light: #F7A959;
+  --color-saffron-dark: #D17015;
+
   /* Semantic Colors */
   --color-green-open: #10b981;
   --color-blue-water: #3b82f6;
@@ -14,6 +19,24 @@
   --color-purple-toilet: #8b5cf6;
   --color-orange-camp: #f97316;
   --color-yellow-helper: #eab308;
+
+  /* Semantic Colors (Helper Portal) */
+  --color-semantic-water: #60A5FA;
+  --color-semantic-water-bg: rgba(96, 165, 250, 0.1);
+  --color-semantic-food: #34D399;
+  --color-semantic-food-bg: rgba(52, 211, 153, 0.1);
+  --color-semantic-medical: #F87171;
+  --color-semantic-medical-bg: rgba(248, 113, 113, 0.1);
+  --color-semantic-stay: #F28C28;
+  --color-semantic-stay-bg: rgba(242, 140, 40, 0.1);
+  --color-semantic-toilets: #A78BFA;
+  --color-semantic-toilets-bg: rgba(167, 139, 250, 0.1);
+  --color-semantic-rest: #A3A3A3;
+  --color-semantic-rest-bg: rgba(163, 163, 163, 0.1);
+  --color-semantic-helpers: #F28C28;
+  --color-semantic-helpers-bg: rgba(242, 140, 40, 0.1);
+  --color-semantic-emergency: #EF4444;
+  --color-semantic-emergency-bg: rgba(239, 68, 68, 0.1);
 
   /* Layout Tokens */
   --mobile-header-gap: 16px;
@@ -23,6 +46,10 @@
   --bg-main: #fcfbf9;
   --bg-map: #f0eadd;
   --bg-color: #0f172a;
+  --color-background: #F7F5F0;
+  --color-surface: #FFFFFF;
+  --color-surface-glass: rgba(255, 255, 255, 0.75);
+  --color-surface-glass-heavy: rgba(255, 255, 255, 0.9);
   --panel-bg: rgba(15, 23, 42, 0.75);
   --panel-border: rgba(255, 255, 255, 0.1);
   --accent: #f97316;
@@ -30,9 +57,58 @@
   --text-primary: #1f2937;
   --text-secondary: #4b5563;
   --text-muted: #9ca3af;
-  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
-  
+  --color-text-primary: #171717;
+  --color-text-secondary: #6B7280;
+  --color-text-muted: #9CA3AF;
+  --color-border: rgba(23, 23, 23, 0.08);
+  --color-border-strong: rgba(23, 23, 23, 0.15);
+  --color-shadow-soft: rgba(0, 0, 0, 0.04);
+  --color-shadow-medium: rgba(0, 0, 0, 0.08);
+  --font-family-base: 'Inter', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-family-heading: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: 'Cormorant Garamond', serif;
+  --font-body: 'Outfit', sans-serif;
+
+  /* Typography Scale */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+  --font-size-4xl: 2.5rem;
+
+  /* Spacing System (4px base) */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+
+  /* Corner Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+  --radius-pill: 9999px;
+
+  /* Blur */
+  --blur-sm: blur(12px);
+  --blur-md: blur(20px);
+  --blur-lg: blur(30px);
+
+  /* Transitions */
+  --transition-fast: 0.15s ease-in-out;
+  --transition-normal: 0.25s ease-in-out;
+  --transition-bounce: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
   /* Liquid Glass Surfaces - Light */
   --glass-bg: rgba(255, 255, 255, 0.75);
   --glass-bg-solid: rgba(255, 255, 255, 0.95);
@@ -42,10 +118,13 @@
 }
 
 html.dark {
-  /* Dark Mode Theme */
   --bg-main: #121212;
   --bg-map: #1e1e1e;
   --bg-color: #0f172a;
+  --color-background: #0F1012;
+  --color-surface: #1A1C1F;
+  --color-surface-glass: rgba(26, 28, 31, 0.65);
+  --color-surface-glass-heavy: rgba(26, 28, 31, 0.85);
   --panel-bg: rgba(15, 23, 42, 0.75);
   --panel-border: rgba(255, 255, 255, 0.1);
   --accent: #f97316;
@@ -53,8 +132,21 @@ html.dark {
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #6b7280;
-  
-  /* Liquid Glass Surfaces - Dark */
+  --color-text-primary: #F9FAFB;
+  --color-text-secondary: #9CA3AF;
+  --color-text-muted: #6B7280;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+  --color-shadow-soft: rgba(0, 0, 0, 0.2);
+  --color-shadow-medium: rgba(0, 0, 0, 0.4);
+  --color-semantic-water-bg: rgba(96, 165, 250, 0.15);
+  --color-semantic-food-bg: rgba(52, 211, 153, 0.15);
+  --color-semantic-medical-bg: rgba(248, 113, 113, 0.15);
+  --color-semantic-stay-bg: rgba(242, 140, 40, 0.15);
+  --color-semantic-toilets-bg: rgba(167, 139, 250, 0.15);
+  --color-semantic-rest-bg: rgba(163, 163, 163, 0.15);
+  --color-semantic-helpers-bg: rgba(242, 140, 40, 0.15);
+  --color-semantic-emergency-bg: rgba(239, 68, 68, 0.15);
   --glass-bg: rgba(30, 30, 30, 0.75);
   --glass-bg-solid: rgba(30, 30, 30, 0.95);
   --glass-border: rgba(255, 255, 255, 0.08);
@@ -95,6 +187,15 @@ body {
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   border-radius: 20px;
+}
+
+.glass-panel-heavy {
+  background-color: var(--color-surface-glass-heavy);
+  backdrop-filter: var(--blur-lg);
+  -webkit-backdrop-filter: var(--blur-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 32px -4px var(--color-shadow-medium);
+  border-radius: var(--radius-2xl);
 }
 
 .text-primary { color: var(--text-primary); }
