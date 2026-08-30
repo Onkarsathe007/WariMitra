@@ -12,6 +12,7 @@ interface NotificationDrawerProps {
 export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ isOpen, onClose }) => {
   const { notifications, markAsRead } = useNotifications();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Mark as read when opened
   React.useEffect(() => {
@@ -65,7 +66,13 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ isOpen, 
                 {notif.media && notif.media.length > 0 && (
                   <div className="media-container">
                     {notif.media.map((url, i) => (
-                      <img key={i} src={url} alt="Alert Attachment" className="alert-image" />
+                      <img 
+                        key={i} 
+                        src={url} 
+                        alt="Alert Attachment" 
+                        className="alert-image" 
+                        onClick={() => setSelectedImage(url)}
+                      />
                     ))}
                   </div>
                 )}
@@ -82,6 +89,15 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ isOpen, 
 
       {showCreateModal && (
         <CreateReportModal onClose={() => setShowCreateModal(false)} />
+      )}
+
+      {selectedImage && (
+        <div className="lightbox-overlay" onClick={() => setSelectedImage(null)}>
+          <button className="lightbox-close" onClick={(e) => { e.stopPropagation(); setSelectedImage(null); }}>
+            <X size={32} />
+          </button>
+          <img src={selectedImage} alt="Enlarged alert" className="lightbox-image" onClick={(e) => e.stopPropagation()} />
+        </div>
       )}
     </>
   );

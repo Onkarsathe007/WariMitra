@@ -77,10 +77,10 @@ const seedData = async () => {
         type: "missing_person",
         location: { type: "Point", coordinates: [75.3240, 17.6760] },
         description: "Missing 65-year old man, wearing white dhoti and cap.",
-        reporterPhone: "+918888888888",
+        reporterPhone: "+919834528764",
         status: "confirmed",
         radius: 2,
-        media: ["https://picsum.photos/seed/missingperson/400/400"]
+        media: ["/assets/warkari_old_man.png"]
       }
     ]);
 
